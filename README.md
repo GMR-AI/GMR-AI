@@ -3,7 +3,7 @@ Repository for the code of our robot GMR-AI.
 1. Title
 2. Description
 3. Install
-4. Library (l)
+4. Library
    - Modul1 (Hardware - Fritzing)
    - Modul2
    - ...
