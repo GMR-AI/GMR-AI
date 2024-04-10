@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/YssfDevOps/GMR-AI">
-    <img src="images/logo.jpg" alt="Logo" width="200" height="200" style="border-radius: 10%;">
+    <img src="images/Logo.jpg" alt="Logo" width="200" height="200" style="border-radius: 10%;">
   </a>
 
 <h3 align="center">GMR-AI</h3>
