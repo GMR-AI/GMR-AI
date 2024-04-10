@@ -64,7 +64,7 @@ The robot is also paired with a mobile application, which allows users to contro
 * [![Flutter][Flutter.dev]][Flutter-url]
 * [![CoppeliaSim][CoppeliaRobotics.com]][CoppeliaSim-url]
 * [![Python][Python.org]][Python-url]
-* [![YOLO][pjreddie.com/darknet/yolo]][YOLO-url]
+* [![YOLO][v7labs.com]][YOLO-url]
 * [![TensorFlow Keras][Keras.io]][TensorFlowKeras-url]
 * [![Kotlin][Kotlinlang.org]][Kotlin-url]
 
@@ -223,8 +223,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [CoppeliaSim-url]: https://www.coppeliarobotics.com/
 [Python.org]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
 [Python-url]: https://www.python.org/
-[pjreddie.com/darknet/yolo]: https://img.shields.io/badge/YOLO-000000?style=for-the-badge&logo=yolo&logoColor=white
-[YOLO-url]: https://pjreddie.com/darknet/yolo/
+[v7labs.com]: https://img.shields.io/badge/YOLO-000000?style=for-the-badge&logo=yolo&logoColor=white
+[YOLO-url]: https://www.v7labs.com/blog/yolo-object-detection
 [Keras.io]: https://img.shields.io/badge/TensorFlow_Keras-D00000?style=for-the-badge&logo=tensorflow&logoColor=white
 [TensorFlowKeras-url]: https://keras.io/
 [Kotlinlang.org]: https://img.shields.io/badge/Kotlin-0095D5?style=for-the-badge&logo=kotlin&logoColor=white
