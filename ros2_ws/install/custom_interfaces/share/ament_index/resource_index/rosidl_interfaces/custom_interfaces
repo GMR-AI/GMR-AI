@@ -1,4 +1,0 @@
-srv/CameraCalibration.idl
-srv/CameraCalibration.srv
-srv/CameraCalibration_Request.msg
-srv/CameraCalibration_Response.msg
