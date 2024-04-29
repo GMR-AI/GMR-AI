@@ -1,0 +1,16 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from custom_interfaces/srv/CameraCalibration.srv
+// generated code does not contain a copyright notice
+
+#include "sensor_msgs/msg/CameraInfo.idl"
+
+module custom_interfaces {
+  module srv {
+    struct CameraCalibration_Request {
+      uint8 structure_needs_at_least_one_member;
+    };
+    struct CameraCalibration_Response {
+      sequence<sensor_msgs::msg::CameraInfo> cam_info;
+    };
+  };
+};
