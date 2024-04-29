@@ -1,0 +1,2 @@
+source;share/rviz_launcher/environment/ament_prefix_path.sh
+source;share/rviz_launcher/environment/path.sh
