@@ -16,6 +16,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CameraCalibration.srv"
+  "msg/ImageGroup.msg"
   DEPENDENCIES sensor_msgs # Add packages that above messages depend on
 )
 
