@@ -1,0 +1,3 @@
+[submodule "MyGMR"]
+	path = MyGMR
+	url = https://github.com/GMR-AI/MyGMR.git
