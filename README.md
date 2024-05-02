@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/YssfDevOps/GMR-AI">
-    <img src="images/Logo.jpg" alt="Logo" width="200" height="200" style="border-radius: 10%;">
+    <img src="assets/Logo.jpg" alt="Logo" width="200" height="200" style="border-radius: 10%;">
   </a>
 
 <h3 align="center">GMR-AI</h3>
@@ -50,7 +50,7 @@ This project involves the design of an automated robot capable of mowing the law
 
 In addition, it incorporates computer vision technology, which allows the robot to avoid obstacles and determine whether it is cutting grass or not. The robot is accompanied by aerial cameras, in this case, drones, which survey the terrain and send all the information to the lawn-mowing robot for processing. This allows the robot to adjust its preplanned path as necessary.
 
-The robot is also paired with a mobile application, which allows users to control the grass cutting level and turn the robot on and off. Furthermore, the application provides the ability to view drone footage and a real-time, accurate 3D representation of the entire terrain based on images captured by the drone.
+The robot is also paired with a mobile application, which allows users to control the grass cutting level and turn the robot on and off. Furthermore, the application provides the ability to view drone footage and a real-time, accurate 3D representation of the entire terrain based on assets captured by the drone.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -140,13 +140,13 @@ The hardware used in this project are the following:
 
 
 ### Software - App Control
-<img src="images/app-control.jpg" alt="Logo" width="340" height="200" style="border-radius: 0%;">
+<img src="assets/app-control.jpg" alt="Logo" width="340" height="200" style="border-radius: 0%;">
 
 ### Computer Vision
 
 
-<img src="images/DronScanning.gif" alt="Logo" width="200" height="200" style="border-radius: 0%;">
-<img src="images/3D-Reconstruction.gif" alt="Logo" width="340" height="200" style="border-radius: 0%;">
+<img src="assets/DronScanning.gif" alt="Logo" width="200" height="200" style="border-radius: 0%;">
+<img src="assets/3D-Reconstruction.gif" alt="Logo" width="340" height="200" style="border-radius: 0%;">
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -176,11 +176,11 @@ The task list for our project is divided into four distinct blocks, which are wo
 ### Machine Learning - Vision Computing
 
 1. Find Dataset for Model Training: Locate a suitable dataset for training the model.
-2. Create Custom Dataset: Generate a custom dataset from images taken in Coppelia, including creating ground truth labels for both training and testing.
+2. Create Custom Dataset: Generate a custom dataset from assets taken in Coppelia, including creating ground truth labels for both training and testing.
 3. Train Object Detection Model: Train a specific model for object detection using the dataset found online and test its performance.
 4. Apply Object Detection Model to Coppelia: Implement the object detection model in Coppelia.
 5. Find Dataset for 3D Stereo Reconstruction: Locate a suitable dataset for 3D stereo reconstruction.
-6. Train 3D Model Using Stereo Images: Train a 3D model using stereo images to verify its functionality.
+6. Train 3D Model Using Stereo assets: Train a 3D model using stereo assets to verify its functionality.
 7. Use Coppelia Camera Dataset for 3D Reconstruction: Use the dataset obtained from Coppelia’s cameras to perform 3D reconstruction with the created model.
 8. Send 3D Reconstruction to Mobile Application: Implement a feature to send the 3D reconstruction to the mobile application.
 9. Implement Vision Models on Jetson Nano: Deploy both vision models on the Jetson Nano.
@@ -198,7 +198,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 
 
-<!-- MARKDOWN LINKS & IMAGES -->
+<!-- MARKDOWN LINKS & assets -->
 [contributors-shield]: https://img.shields.io/github/contributors/github_username/repo_name.svg?style=for-the-badge
 [contributors-url]: https://github.com/github_username/repo_name/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/github_username/repo_name.svg?style=for-the-badge
