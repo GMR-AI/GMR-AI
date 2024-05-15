@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="GMR_AI">
-    <link name="robot_base">
+    <link name="base_link">
         <inertial>
             <origin xyz="0.000000 0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <inertia ixx="8.4166666666667" ixy="0.0" ixz="0.0" iyy="8.4166666666667" iyz="0.0" izz="16.666666666667" />
@@ -51,7 +51,7 @@
     </link>
     <joint type="continuous" name="br_joint">
         <axis xyz="0 0 1" />
-        <parent link="robot_base" />
+        <parent link="base_link" />
         <child link="br_link" />
         <origin xyz="0.406000 -0.345000 -0.320000" rpy="0.000000 1.570796 0.000000" />
     </joint>
@@ -88,7 +88,7 @@
     </link>
     <joint type="continuous" name="bl_joint">
         <axis xyz="0 0 1" />
-        <parent link="robot_base" />
+        <parent link="base_link" />
         <child link="bl_link" />
         <origin xyz="-0.410000 -0.345000 -0.320000" rpy="0.000000 1.570796 0.000000" />
     </joint>
@@ -125,7 +125,7 @@
     </link>
     <joint type="continuous" name="fr_joint">
         <axis xyz="0 0 1" />
-        <parent link="robot_base" />
+        <parent link="base_link" />
         <child link="fr_link" />
         <origin xyz="0.406000 0.345000 -0.320000" rpy="0.000000 1.570796 0.000000" />
     </joint>
@@ -162,7 +162,7 @@
     </link>
     <joint type="continuous" name="fl_joint">
         <axis xyz="0 0 1" />
-        <parent link="robot_base" />
+        <parent link="base_link" />
         <child link="fl_link" />
         <origin xyz="-0.410000 0.345000 -0.320000" rpy="0.000000 1.570796 0.000000" />
     </joint>
@@ -200,7 +200,7 @@
     <joint type="prismatic" name="tubo_joint">
         <axis xyz="0 0 1" />
         <limit upper="1.0" velocity="1.0" lower="-0.0" effort="50.0" />
-        <parent link="robot_base" />
+        <parent link="base_link" />
         <child link="tubo_link" />
         <origin xyz="0.000000 0.000000 -0.238000" rpy="-3.141593 3.141593 -3.141593" />
     </joint>

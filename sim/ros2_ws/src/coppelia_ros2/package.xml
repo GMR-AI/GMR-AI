@@ -1,24 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>gmrai_description</name>
+  <name>coppelia_ros2</name>
   <version>0.0.0</version>
-  <description>Description of the GMR-AI robot</description>
+  <description>Package to run Coppelia in a launch file from ROS2.</description>
   <maintainer email="adriangt2001@hotmail.com">adriangt2001</maintainer>
   <license>Apache-2.0</license>
 
-  <!--Python dependencies-->
-  <exec_depend>launch</exec_depend>
-  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>rclpy</exec_depend>
 
-  <!--Packages dependencies-->
-  <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>joint_state_publisher</exec_depend>
-  <exec_depend>rviz2</exec_depend>
-
-  <!--Mysterious dependencies (I'd like to get rid of this since we're not using it-->
-  <exec_depend>xacro</exec_depend>
-  
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
