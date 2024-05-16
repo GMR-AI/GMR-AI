@@ -34,7 +34,7 @@ class CoppeliaNode(Node):
                 self.coppelia_scene_path.get_parameter_value().string_value,
                 ])
         else:
-            subprocess.Popen([
+            subprocess.run([
                 '/bin/bash', 
                 os.path.join(self.coppelia_root_dir.get_parameter_value().string_value, 'coppeliaSim.sh'),
                 '-s',

@@ -27,6 +27,11 @@ def generate_launch_description():
             {'robot_description': Command(['xacro ', LaunchConfiguration('model')])}
         ]
     )
+    map_to_odom_static_publisher_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['--frame-id', 'world', '--child-frame-id', 'odom']
+    )
 
     # ------- Custom packages -------
     odom_to_base_link_frame_publisher_node = Node(
@@ -40,5 +45,6 @@ def generate_launch_description():
                               description='Absolute path to robot urdf file'),
         robot_state_publisher_node,
         joint_state_publisher_node,
+        map_to_odom_static_publisher_node,
         odom_to_base_link_frame_publisher_node
     ])
