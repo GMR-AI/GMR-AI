@@ -13,12 +13,14 @@ geometry_msgs/msg/TwistWithCovariance
 geometry_msgs/msg/Vector3
 nav_msgs/msg/Odometry
 rosgraph_msgs/msg/Clock
+sensor_msgs/msg/CameraInfo
 sensor_msgs/msg/Image
+sensor_msgs/msg/JointState
 sensor_msgs/msg/LaserScan
 sensor_msgs/msg/PointCloud2
 sensor_msgs/msg/PointField
 sensor_msgs/msg/Range
-sensor_msgs/msg/JointState
+sensor_msgs/msg/RegionOfInterest
 std_msgs/msg/Bool
 std_msgs/msg/Byte
 std_msgs/msg/ColorRGBA

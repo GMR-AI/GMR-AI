@@ -33,7 +33,7 @@ def generate_launch_description():
     map_to_odom_static_publisher_node = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=['--frame-id', 'world', '--child-frame-id', 'odom']
+        arguments=['--frame-id', 'map', '--child-frame-id', 'odom']
     )
     robot_localization_node = Node(
         package='robot_localization',
