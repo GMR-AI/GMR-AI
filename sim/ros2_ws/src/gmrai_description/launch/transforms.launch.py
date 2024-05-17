@@ -16,7 +16,8 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         parameters=[
-            {'robot_description': Command(['xacro ', LaunchConfiguration('model')])}
+            {'robot_description': Command(['xacro ', LaunchConfiguration('model')])},
+            {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
     joint_state_publisher_node = Node(
@@ -24,7 +25,9 @@ def generate_launch_description():
         executable='joint_state_publisher',
         name='joint_state_publisher',
         parameters=[
-            {'robot_description': Command(['xacro ', LaunchConfiguration('model')])}
+            {'robot_description': Command(['xacro ', LaunchConfiguration('model')])},
+            {'source_list': ['gmr/joint_state']},
+            {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
     map_to_odom_static_publisher_node = Node(
@@ -32,19 +35,24 @@ def generate_launch_description():
         executable='static_transform_publisher',
         arguments=['--frame-id', 'world', '--child-frame-id', 'odom']
     )
-
-    # ------- Custom packages -------
-    odom_to_base_link_frame_publisher_node = Node(
-        package='custom_transforms',
-        executable='odom_to_base_link',
-        name='odom_to_base_link'
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[
+            os.path.join(pkg_share, 'config/ekf.yaml'),
+            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+        ]
     )
 
     return launch.LaunchDescription([
         DeclareLaunchArgument(name='model', default_value=default_model_path,
                               description='Absolute path to robot urdf file'),
+        DeclareLaunchArgument(name='use_sim_time', default_value='True',
+                              description='Flag to enable use_sim_time'),
         robot_state_publisher_node,
         joint_state_publisher_node,
         map_to_odom_static_publisher_node,
-        odom_to_base_link_frame_publisher_node
+        robot_localization_node,
     ])
