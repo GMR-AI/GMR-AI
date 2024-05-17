@@ -1,5 +1,9 @@
 # ROS2 Interface plugin for CoppeliaSim
 
+## This is a customized version for this project with added messages in the [meta/interfaces.txt](https://github.com/GMR-AI/GMR-AI/blob/PathPlanning/sim/ros2_ws/src/sim_ros2_interface/meta/interfaces.txt). The official version can be found in [CoppeliaSim official repo](https://github.com/CoppeliaRobotics/simROS2/tree/master)
+
+
+
 Supported ROS2 versions:
 
  - Humble Hawksbill
