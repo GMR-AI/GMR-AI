@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ------- Variables -------
     default_coppelia_root_dir = '/home/adriangt2001/CoppeliaSim_Edu_V4_6_0_rev18_Ubuntu22_04'
-    default_coppelia_scene_path = '/home/adriangt2001/GMR-AI/sim/coppeliasim/GMR-Scene/Projecte.ttt'
+    default_coppelia_scene_path = '/home/adriangt2001/GMR-AI/sim/coppeliasim/GMR-Scene/GMR.ttt'
     default_coppelia_headless = 'False'
 
     # ------- Custom packages -------

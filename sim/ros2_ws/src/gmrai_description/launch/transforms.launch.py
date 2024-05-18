@@ -8,7 +8,7 @@ import os
 def generate_launch_description():
     # ------- Variables -------
     pkg_share = FindPackageShare(package='gmrai_description').find('gmrai_description')
-    default_model_path = os.path.join(pkg_share, 'urdf/GMR-AI.urdf')
+    default_model_path = os.path.join(pkg_share, 'urdf/GMR.urdf')
 
     # ------- Pre-built packages -------
     robot_state_publisher_node = Node(
