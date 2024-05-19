@@ -9,6 +9,7 @@ def generate_launch_description():
     # ------- Variables -------
     pkg_share = FindPackageShare(package='gmrai_description').find('gmrai_description')
     default_model_path = os.path.join(pkg_share, 'urdf/GMR.urdf')
+    default_slam_params_file = os.path.join(pkg_share, 'config/slam_online_async_params.yaml')
 
     # ------- Pre-built packages -------
     robot_state_publisher_node = Node(
@@ -30,11 +31,19 @@ def generate_launch_description():
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
-    map_to_odom_static_publisher_node = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['--frame-id', 'map', '--child-frame-id', 'odom']
+    slam_node = Node(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen',
+        parameters=[LaunchConfiguration('slamconfig'),
+                    {'use_sim_time': LaunchConfiguration('use_sim_time')}]
     )
+    # map_to_odom_static_publisher_node = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     arguments=['--frame-id', 'map', '--child-frame-id', 'odom']
+    # )
     robot_localization_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -47,12 +56,15 @@ def generate_launch_description():
     )
 
     return launch.LaunchDescription([
+        DeclareLaunchArgument(name='slamconfig', default_value=default_slam_params_file,
+                        description='Absolute path to slam_toolbox config file'),
         DeclareLaunchArgument(name='model', default_value=default_model_path,
                               description='Absolute path to robot urdf file'),
         DeclareLaunchArgument(name='use_sim_time', default_value='True',
                               description='Flag to enable use_sim_time'),
         robot_state_publisher_node,
         joint_state_publisher_node,
-        map_to_odom_static_publisher_node,
+        slam_node,
+        # map_to_odom_static_publisher_node,
         robot_localization_node,
     ])
