@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
       Splitter Ratio: 0.5
-    Tree Height: 134
+    Tree Height: 302
 Visualization Manager:
   Class: ""
   Displays:
@@ -77,6 +77,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        lidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         tubo_link:
           Alpha: 1
           Show Axes: false
@@ -123,6 +128,8 @@ Visualization Manager:
           Value: true
         fr_link:
           Value: true
+        lidar_link:
+          Value: true
         map:
           Value: true
         odom:
@@ -158,13 +165,15 @@ Visualization Manager:
                 {}
               fr_link:
                 {}
+              lidar_link:
+                {}
               tubo_link:
                 cuchilla_link:
                   {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/Image
-      Enabled: true
+      Enabled: false
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -176,6 +185,27 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /cam0/image_transport
+      Value: false
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map_updates
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
@@ -226,7 +256,7 @@ Window Geometry:
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000156000001b9fc0200000002fb000000100044006900730070006c006100790073010000003d00000111000000c900fffffffb0000000a0049006d0061006700650100000154000000a20000002800ffffff00000160000001b900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Width: 700
-  X: 70
-  Y: 27
+  QMainWindow State: 000000ff00000000fd000000010000000000000156000001b9fc0200000002fb000000100044006900730070006c006100790073010000003d000001b9000000c900fffffffb0000000a0049006d0061006700650000000154000000a20000002800ffffff0000015f000001b900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 699
+  X: 646
+  Y: 289
