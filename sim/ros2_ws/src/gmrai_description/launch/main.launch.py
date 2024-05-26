@@ -24,9 +24,15 @@ def generate_launch_description():
                                        '/visualization.launch.py']),
         launch_arguments={}.items(),
     )
+    vision_nodes = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
+                                       '/vision.launch.py']),
+        launch_arguments={}.items(),
+    )
     
     return launch.LaunchDescription([
         simulation_nodes,
         transform_nodes,
-        visualization_nodes
+        visualization_nodes,
+        vision_nodes,
     ])

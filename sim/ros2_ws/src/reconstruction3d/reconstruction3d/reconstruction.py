@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 import rclpy
 import rclpy.logging
 from rclpy.node import Node
+import subprocess
 
 
 from sensor_msgs.msg import CameraInfo, CompressedImage
 from sensor_msgs.msg import PointCloud2
-# from custom_interfaces import SendPath
-from custom_interfaces.msg import ImageCamInfoGroup
+from custom_interfaces.msg import ImageCamInfoGroup, StringStamped
 from cv_bridge import CvBridge
 bridge = CvBridge()
     
@@ -27,17 +27,14 @@ class Reconstruction(Node):
         self.image_group_subscriber = self.create_subscription(ImageCamInfoGroup, 'cams/image_group', self.image_group_callback, 10)
         self.image_group_subscriber
 
-        self.point_cloud_publisher = self.create_publisher(PointCloud2, 'filtered_clouds', 10)
-
-        # TODO: make client for a 3D reconstruction service using instant-ngp
-        # self.reconstruct_client = self.create_client(SendPath, 'reconstruct_model', 10)
-        # self.req = SendPath.Request()
+        self.model_publisher = self.create_publisher(StringStamped, 'model/path', 10)
 
     def image_group_callback(self, image_cam_info_group):
         if not self.available: return
         self.available = False
         i = 0
         cam_info = []
+        header = image_cam_info_group.image_cam_info_list[0].cam_info.header
         for im_cam_info in image_cam_info_group.image_cam_info_list:
             imgmsg = im_cam_info.img
             cam_info.append(im_cam_info.cam_info)
@@ -46,8 +43,22 @@ class Reconstruction(Node):
             cv2.imwrite('data/images/robot_cam'+'{:02d}'.format(i)+'.jpg', im)
             i+=1
         self.cam_info_to_json(cam_info)
-        # self.send_reconstruct_request()
-        # self.publish_point_cloud()
+        home = "/home/adriangt2001/"
+        subprocess.run(["conda", "run", "-n", "instantngp", "python", home + "instant-ngp/scripts/run.py",
+                         "--scene", "data",
+                         "--save_mesh", "model/gmr",
+                        "--n_steps", "5000"])
+        print('Finished model')
+        self.publish_model_path(header, "model/gmr.ply")
+        
+        self.available = True
+
+    def publish_model_path(self, header, path):
+        msg = StringStamped()
+        msg.header = header
+        msg.data = path
+
+        self.model_publisher.publish(msg)
 
     def send_reconstruct_request(self):
         self.req.folder = self.data_path
@@ -56,20 +67,7 @@ class Reconstruction(Node):
         return self.future.result()
         
     def publish_point_cloud(self):
-        # Process PLY to PointCloud2
-        # Header
-        # height
-        # width
-        # fields
-        # is_bigendian
-        # point_step
-        # row_step
-        # data
-        # is_dense
-        pcd = o3d.io.read_point_cloud('model/gmr.ply')
-        vis = o3d.visualization.Visualizer()
-        vis.create_window()
-        vis.add_geometry(pcd)
+        self.xyzrgb_array_to_pointcloud2()
         return
     
     def cam_info_to_json(self, cam_info):
@@ -117,20 +115,6 @@ class Reconstruction(Node):
             json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def display_inlier_outlier(cloud, ind):
-    inlier_cloud = cloud.select_by_index(ind)
-    outlier_cloud = cloud.select_by_index(ind, invert=True)
-
-    print("Showing outliers (red) and inliers (gray): ")
-    outlier_cloud.paint_uniform_color([1, 0, 0])
-    inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
-    o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud],
-                                      zoom=0.3412,
-                                      front=[0.4257, -0.2125, -0.8795],
-                                      lookat=[2.6172, 2.0475, 1.532],
-                                      up=[-0.0694, -0.9768, 0.2024])
-
-
 
 def main():
     rclpy.init()
@@ -139,37 +123,3 @@ def main():
     rclpy.spin(recon_node)
     recon_node.destroy_node()
     rclpy.shutdown()
-
-if __name__ == '__main__':
-    # Load point cloud
-    pcd = o3d.io.read_point_cloud('model/gmr.ply')
-
-    # Remove outliers
-    voxel_down_pcd = pcd.voxel_down_sample(voxel_size=0.02)
-    cl, ind = voxel_down_pcd.remove_radius_outlier(nb_points=16, radius=0.05)
-    pcd_inliers = voxel_down_pcd.select_by_index(ind)
-
-    # Segment Plane
-    plane_model, inliers = pcd_inliers.segment_plane(distance_threshold=0.02, ransac_n=3, num_iterations=1000)
-
-    inlier_cloud = pcd_inliers.select_by_index(inliers, invert=True)
-
-    # Remove outliers
-    voxel_down_pcd = inlier_cloud.voxel_down_sample(voxel_size=0.02)
-    cl, ind = voxel_down_pcd.remove_radius_outlier(nb_points=16, radius=0.05)
-    pcd_inliers = voxel_down_pcd.select_by_index(ind)
-
-    # Clustering
-    labels = np.array(pcd_inliers.cluster_dbscan(eps=0.05, min_points=20, print_progress=True))
-
-    max_label = labels.max()
-    colors = plt.get_cmap("tab20")(labels / (max_label if max_label > 0 else 1))
-    colors[labels < 0] = 0
-    pcd_inliers.colors = o3d.utility.Vector3dVector(colors[:, :3])
-
-    o3d.visualization.draw_geometries([pcd_inliers])
-
-
-
-
-
