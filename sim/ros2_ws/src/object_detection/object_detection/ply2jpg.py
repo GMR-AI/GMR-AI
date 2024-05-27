@@ -1,5 +1,6 @@
 import numpy as np
 from plyfile import PlyData
+import cv2
 
 def read_ply(file_path):
     with open(file_path, 'rb') as f:
@@ -36,4 +37,5 @@ def generate_top_down_image(point_cloud, resolution=(256, 256)):
 
 def ply2jpg(ply_path):
     pcd = read_ply(ply_path)
-    return generate_top_down_image(pcd, resolution=(512, 512))
+    image = cv2.cvtColor(generate_top_down_image(pcd), cv2.COLOR_RGB2BGR)
+    return image

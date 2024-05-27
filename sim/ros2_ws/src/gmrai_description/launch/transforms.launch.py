@@ -31,26 +31,36 @@ def generate_launch_description():
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
-    slam_node = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox',
-        output='screen',
-        parameters=[LaunchConfiguration('slamconfig'),
-                    {'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    )
+    # slam_node = Node(
+    #     package='slam_toolbox',
+    #     executable='async_slam_toolbox_node',
+    #     name='slam_toolbox',
+    #     output='screen',
+    #     parameters=[LaunchConfiguration('slamconfig'),
+    #                 {'use_sim_time': LaunchConfiguration('use_sim_time')}]
+    # )
     # map_to_odom_static_publisher_node = Node(
     #     package='tf2_ros',
     #     executable='static_transform_publisher',
     #     arguments=['--frame-id', 'map', '--child-frame-id', 'odom']
     # )
-    robot_localization_node = Node(
+    odom2robot_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='ekf_filter_node',
+        name='odom2robot_node',
         output='screen',
         parameters=[
-            os.path.join(pkg_share, 'config/ekf.yaml'),
+            os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
+            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+        ]
+    )
+    map2odom_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='map2odom_node',
+        output='screen',
+        parameters=[
+            os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
@@ -64,7 +74,8 @@ def generate_launch_description():
                               description='Flag to enable use_sim_time'),
         robot_state_publisher_node,
         joint_state_publisher_node,
-        slam_node,
+        # slam_node,
         # map_to_odom_static_publisher_node,
-        robot_localization_node,
+        odom2robot_node,
+        map2odom_node,
     ])

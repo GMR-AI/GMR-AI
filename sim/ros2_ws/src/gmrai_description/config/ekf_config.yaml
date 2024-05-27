@@ -1,0 +1,51 @@
+odom2robot_node:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    print_diagnostics: true
+    publish_acceleration: false
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    odom0: gmr/odom
+    odom0_config: [true, true, false, # x, y, z
+                   false, false, true,  # roll, pitch, yaw
+                   false, false, false,   # velx, vely, velz
+                   false, false, false, # velroll, velpitch, velyaw
+                   false, false, false] # accelx, accely, accelz
+
+map2odom_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 2.0
+    two_d_mode: true
+    transform_time_offset: 90.0
+    transform_timeout: 0
+    print_diagnostics: true
+    publish_acceleration: false
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map
+    
+    odom0: odometry/filtered
+    odom0_config: [true, true, false, # x, y, z
+                   false, false, true,  # roll, pitch, yaw
+                   false, false, false,   # velx, vely, velz
+                   false, false, false, # velroll, velpitch, velyaw
+                   false, false, false] # accelx, accely, accelz
+    odom0_queue_size: 1000
+    odom0_rejection_threshold: 2.0
+
+    odom1: odom_real
+    odom1_config: [true, true, false,  # x, y, z
+                   false, false, false, # roll, pitch, yaw
+                   false, false, false, # velx, vely, velz
+                   false, false, false, # velroll, velpitch, velyaw
+                   false, false, false] # accelx, accely, accelz
+    odom1_queue_size: 10
+    odom1_rejection_threshold: 2.0

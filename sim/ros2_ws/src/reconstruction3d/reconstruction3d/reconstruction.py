@@ -2,6 +2,7 @@ import cv2
 import json
 import math
 import os
+import time
 import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
@@ -10,9 +11,6 @@ import rclpy.logging
 from rclpy.node import Node
 import subprocess
 
-
-from sensor_msgs.msg import CameraInfo, CompressedImage
-from sensor_msgs.msg import PointCloud2
 from custom_interfaces.msg import ImageCamInfoGroup, StringStamped
 from cv_bridge import CvBridge
 bridge = CvBridge()
@@ -21,13 +19,32 @@ bridge = CvBridge()
 class Reconstruction(Node):
     def __init__(self):
         super().__init__('reconstruction_node')
+        time.sleep(10)
         self.data_path = 'data'
         self.available = True
+
+        self.default_instantngp_path = os.path.join(os.path.expanduser('~'), "instant-ngp/scripts/run.py")
+        self.default_conda_environment = ''
+        self.default_images_path = 'data'
+        self.default_ply_path = 'model/gmr'
+
+        self.declare_parameter('instantngp_path', self.default_instantngp_path)
+        self.instantngp_path = self.get_parameter('instantngp_path')
+
+        self.declare_parameter('conda_environment', self.default_conda_environment)
+        self.conda_environment = self.get_parameter('conda_environment')
+
+        self.declare_parameter('images_path', self.default_images_path)
+        self.images_path = self.get_parameter('images_path')
+
+        self.declare_parameter('ply_path', self.default_ply_path)
+        self.ply_path = self.get_parameter('ply_path')
 
         self.image_group_subscriber = self.create_subscription(ImageCamInfoGroup, 'cams/image_group', self.image_group_callback, 10)
         self.image_group_subscriber
 
         self.model_publisher = self.create_publisher(StringStamped, 'model/path', 10)
+
 
     def image_group_callback(self, image_cam_info_group):
         if not self.available: return
@@ -43,15 +60,30 @@ class Reconstruction(Node):
             cv2.imwrite('data/images/robot_cam'+'{:02d}'.format(i)+'.jpg', im)
             i+=1
         self.cam_info_to_json(cam_info)
-        home = "/home/adriangt2001/"
-        subprocess.run(["conda", "run", "-n", "instantngp", "python", home + "instant-ngp/scripts/run.py",
-                         "--scene", "data",
-                         "--save_mesh", "model/gmr",
-                        "--n_steps", "5000"])
-        print('Finished model')
+        
+        self.build_model()
+        
         self.publish_model_path(header, "model/gmr.ply")
         
         self.available = True
+
+
+    def build_model(self):
+        if self.conda_environment.get_parameter_value().string_value == '':
+            subprocess.run(['python', self.instantngp_path.get_parameter_value().string_value,
+                            '--scene', self.images_path.get_parameter_value().string_value,
+                            '--save_mesh', self.ply_path.get_parameter_value().string_value,
+                            '--n_steps', '5000'],
+                            stdout=subprocess.DEVNULL,)
+        else:
+            subprocess.run(['conda', 'run', '-n', self.conda_environment.get_parameter_value().string_value,
+                            'python', self.instantngp_path.get_parameter_value().string_value,
+                            '--scene', self.images_path.get_parameter_value().string_value,
+                            '--save_mesh', self.ply_path.get_parameter_value().string_value,
+                            '--n_steps', '5000'],
+                            stdout=subprocess.DEVNULL,)
+        self.get_logger().info('Finished model')
+
 
     def publish_model_path(self, header, path):
         msg = StringStamped()
@@ -60,16 +92,14 @@ class Reconstruction(Node):
 
         self.model_publisher.publish(msg)
 
+
     def send_reconstruct_request(self):
         self.req.folder = self.data_path
         self.future = self.reconstruct_client.call_async(self.req)
         rclpy.spin_until_future_complete(self, self.future)
         return self.future.result()
-        
-    def publish_point_cloud(self):
-        self.xyzrgb_array_to_pointcloud2()
-        return
-    
+
+
     def cam_info_to_json(self, cam_info):
         data = {}
         data['w'] = cam_info[0].width

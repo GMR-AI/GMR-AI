@@ -2,8 +2,7 @@ import rclpy
 from rclpy.node import Node
 
 from custom_interfaces.msg import StringStamped
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid, Odometry
 
 from object_detection.ply2jpg import ply2jpg
 from object_detection.instance_segmentation import segmentation
@@ -24,8 +23,8 @@ class ObjectDetection(Node):
         self.model_subscription = self.create_subscription(StringStamped, 'model/path', self.model_callback, 10)
         self.model_subscription
 
-        self.map_publisher = self.create_publisher(OccupancyGrid, 'map/obstacle_grid', 10)
-        self.robot_position_publisher = self.create_publisher(PoseWithCovarianceStamped, 'gmr/real_position', 10)
+        self.map_publisher = self.create_publisher(OccupancyGrid, 'map', 10)
+        self.robot_position_publisher = self.create_publisher(Odometry, 'odom_real', 10)
 
         self.detection_model = YOLO(self.model_file.get_parameter_value().string_value)
 
@@ -35,19 +34,26 @@ class ObjectDetection(Node):
         ply_path = msg.data
         image = ply2jpg(ply_path)
         robot_mask, obstacle_mask = segmentation(self.detection_model, image)
+        self.get_logger().info('Obstacle mask max value: ' + str(np.max(robot_mask)))
+        self.get_logger().info('Obstacle mask type: ' + str(robot_mask.dtype))
+        self.get_logger().info('Obstacle mask shape: ' + str(robot_mask.shape))
 
         # Publish map
-        self.publish_occupancy_grid(obstacle_mask, header)
+        if not np.all(obstacle_mask == 0):
+            self.get_logger().info('Map detected')
+            self.publish_occupancy_grid(obstacle_mask, header)
 
         # Publish robot position
-        real_position = self.estimate_robot_position(robot_mask)
-        self.publish_robot_position(real_position, header)
+        if not np.all(robot_mask == 0):
+            self.get_logger().info('Robot Detected')
+            real_position, meters_per_pixel = self.estimate_scale_and_transform(robot_mask)
+            self.publish_robot_position(real_position, header)
 
 
     def publish_occupancy_grid(self, binary_image, header):
         occupancy_grid = OccupancyGrid()
         
-        occupancy_grid.header = header
+        occupancy_grid.header.stamp = header.stamp
         occupancy_grid.header.frame_id = 'map'
 
         occupancy_grid.info.resolution = 0.05
@@ -58,31 +64,54 @@ class ObjectDetection(Node):
         occupancy_grid.info.origin.position.z = 0.0
         occupancy_grid.info.origin.orientation.w = 1.0
 
-        occupancy_values = np.where(binary_image == 255, 0, 100).astype(np.int8)
+        occupancy_values = np.where(binary_image == 255, 100, 0).astype(np.int8)
         occupancy_grid.data = occupancy_values.flatten().tolist()
 
         self.map_publisher.publish(occupancy_grid)
 
 
     def publish_robot_position(self, real_position, header):
-        pose_msg = PoseWithCovarianceStamped()
-        pose_msg.header = header
-        pose_msg.header.frame_id = 'map'
+        odom_msg = Odometry()
+        odom_msg.header.stamp = header.stamp
+        odom_msg.header.frame_id = 'map'
+        odom_msg.child_frame_id = 'base_link'
 
-        pose_msg.pose.pose.position.x = real_position[0]
-        pose_msg.pose.pose.position.y = real_position[1]
+        odom_msg.pose.pose.position.x = real_position[1]
+        odom_msg.pose.pose.position.y = real_position[0]
+        odom_msg.pose.pose.position.z = 0.0
+        odom_msg.pose.pose.orientation.w = 0.0
+        odom_msg.pose.covariance = self.compute_covariance_matrix(0.1, 2 * np.pi)
 
-        self.robot_position_publisher.publish(pose_msg)
+        odom_msg.twist.twist.linear.x = 0.0
+        odom_msg.twist.twist.linear.y = 0.0
+        odom_msg.twist.twist.angular.z = 0.0
+        odom_msg.twist.covariance = np.zeros(36).tolist()
+
+        self.robot_position_publisher.publish(odom_msg)
 
 
-    def estimate_robot_position(self, robot_mask):
+    def estimate_scale_and_transform(self, robot_mask):
         real_radius = 1
         contours, _ = cv2.findContours(robot_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         largest_contour = max(contours, key=cv2.contourArea)
         (x, y), radius = cv2.minEnclosingCircle(largest_contour)
         meters_per_pixel = real_radius / radius
         real_world_coords = (int(x) * meters_per_pixel, int(y) * meters_per_pixel)
-        return real_world_coords
+        return real_world_coords, meters_per_pixel
+
+    def compute_covariance_matrix(self, std_dev_position=0.1, std_dev_orientation=2*np.pi):
+        covariance_matrix = np.zeros((6,6))
+
+        # Set the variances (squared standard deviations)
+        covariance_matrix[0, 0] = std_dev_position ** 2  # Variance in x
+        covariance_matrix[1, 1] = std_dev_position ** 2  # Variance in y
+        covariance_matrix[2, 2] = 1e-6  # Variance in z, small value as it's a 2D plane
+        covariance_matrix[3, 3] = 1e-6  # Variance in rotation around x-axis, small value for 2D
+        covariance_matrix[4, 4] = 1e-6  # Variance in rotation around y-axis, small value for 2D
+        covariance_matrix[5, 5] = std_dev_orientation ** 2  # Variance in yaw
+
+        return covariance_matrix.flatten().tolist()
+
 
 def main():
     rclpy.init()

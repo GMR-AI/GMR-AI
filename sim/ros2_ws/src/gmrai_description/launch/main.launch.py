@@ -33,6 +33,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         simulation_nodes,
         transform_nodes,
-        visualization_nodes,
         vision_nodes,
+        visualization_nodes,
     ])
