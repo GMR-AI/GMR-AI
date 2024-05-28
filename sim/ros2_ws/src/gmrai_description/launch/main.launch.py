@@ -9,6 +9,7 @@ def generate_launch_description():
     # ------- Variables -------
     pkg_share = FindPackageShare(package='gmrai_description').find('gmrai_description')
     param_file = LaunchConfiguration('params_file', default=os.path.join(pkg_share, 'config', 'nav2_params.yaml'))
+    # param_file = LaunchConfiguration('params_file', default=os.path.join(pkg_share, 'config', 'coverage_params.yaml'))
 
     # ------- Launch Files -------
     simulation_nodes = IncludeLaunchDescription(
@@ -27,6 +28,12 @@ def generate_launch_description():
         launch_arguments={'params_file': param_file,
                           'use_sim_time': 'True'}.items()
     )
+    coverage_nodes = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
+                                       '/coverage.launch.py']),
+        launch_arguments={'params_file': param_file,
+                          'use_sim_time': 'True'}.items()
+    )
     vision_nodes = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
                                        '/vision.launch.py']),
@@ -42,6 +49,7 @@ def generate_launch_description():
         simulation_nodes,
         transform_nodes,
         nav2_nodes,
+        # coverage_nodes,
         vision_nodes,
         visualization_nodes,
     ])
