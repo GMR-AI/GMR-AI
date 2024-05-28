@@ -62,7 +62,16 @@ def generate_launch_description():
         parameters=[
             os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
-        ]
+        ],
+        remappings=[
+            ('/tf', '/tf/update')
+        ],
+        # arguments=['--ros-args', '--log-level', 'debug']
+    )
+    map2odom_replicator_node = Node(
+        package='custom_transforms',
+        executable='map2odom',
+        name='map2odom_replicator_node',
     )
 
     return launch.LaunchDescription([
@@ -78,4 +87,5 @@ def generate_launch_description():
         # map_to_odom_static_publisher_node,
         odom2robot_node,
         map2odom_node,
+        map2odom_replicator_node,
     ])

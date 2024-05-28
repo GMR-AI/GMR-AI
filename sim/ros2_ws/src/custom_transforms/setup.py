@@ -23,8 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'odom_to_base_link = custom_transforms.odom_to_base_link:main',
-            #'map_to_odom = custom_transforms.map_to_odom:main', # Uncomment when map_to_odom transform is implemented
+            'odom2baselink = custom_transforms.odom_to_base_link:main',
+            'map2odom = custom_transforms.map_to_odom:main', # Uncomment when map_to_odom transform is implemented
         ],
     },
 )

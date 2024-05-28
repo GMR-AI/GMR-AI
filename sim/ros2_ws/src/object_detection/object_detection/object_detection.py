@@ -34,9 +34,6 @@ class ObjectDetection(Node):
         ply_path = msg.data
         image = ply2jpg(ply_path)
         robot_mask, obstacle_mask = segmentation(self.detection_model, image)
-        self.get_logger().info('Obstacle mask max value: ' + str(np.max(robot_mask)))
-        self.get_logger().info('Obstacle mask type: ' + str(robot_mask.dtype))
-        self.get_logger().info('Obstacle mask shape: ' + str(robot_mask.shape))
 
         # Publish map
         if not np.all(obstacle_mask == 0):
@@ -57,10 +54,10 @@ class ObjectDetection(Node):
         occupancy_grid.header.frame_id = 'map'
 
         occupancy_grid.info.resolution = 0.05
-        occupancy_grid.info.width = binary_image.shape[1]
-        occupancy_grid.info.height = binary_image.shape[0]
-        occupancy_grid.info.origin.position.x = 0.0
-        occupancy_grid.info.origin.position.y = 0.0
+        occupancy_grid.info.width = binary_image.shape[0]
+        occupancy_grid.info.height = binary_image.shape[1]
+        occupancy_grid.info.origin.position.x = - binary_image.shape[0] / 2 * 0.05
+        occupancy_grid.info.origin.position.y = - binary_image.shape[1] / 2 * 0.05
         occupancy_grid.info.origin.position.z = 0.0
         occupancy_grid.info.origin.orientation.w = 1.0
 
