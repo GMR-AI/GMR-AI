@@ -106,134 +106,6 @@ Visualization Manager:
           Value: true
         br_link:
           Value: true
-        camera0:
-          Value: true
-        camera1:
-          Value: true
-        camera10:
-          Value: true
-        camera11:
-          Value: true
-        camera12:
-          Value: true
-        camera13:
-          Value: true
-        camera14:
-          Value: true
-        camera15:
-          Value: true
-        camera16:
-          Value: true
-        camera17:
-          Value: true
-        camera18:
-          Value: true
-        camera19:
-          Value: true
-        camera2:
-          Value: true
-        camera20:
-          Value: true
-        camera21:
-          Value: true
-        camera22:
-          Value: true
-        camera23:
-          Value: true
-        camera24:
-          Value: true
-        camera25:
-          Value: true
-        camera26:
-          Value: true
-        camera27:
-          Value: true
-        camera28:
-          Value: true
-        camera29:
-          Value: true
-        camera3:
-          Value: true
-        camera30:
-          Value: true
-        camera31:
-          Value: true
-        camera4:
-          Value: true
-        camera5:
-          Value: true
-        camera6:
-          Value: true
-        camera7:
-          Value: true
-        camera8:
-          Value: true
-        camera9:
-          Value: true
-        camera_visualization0:
-          Value: true
-        camera_visualization1:
-          Value: true
-        camera_visualization10:
-          Value: true
-        camera_visualization11:
-          Value: true
-        camera_visualization12:
-          Value: true
-        camera_visualization13:
-          Value: true
-        camera_visualization14:
-          Value: true
-        camera_visualization15:
-          Value: true
-        camera_visualization16:
-          Value: true
-        camera_visualization17:
-          Value: true
-        camera_visualization18:
-          Value: true
-        camera_visualization19:
-          Value: true
-        camera_visualization2:
-          Value: true
-        camera_visualization20:
-          Value: true
-        camera_visualization21:
-          Value: true
-        camera_visualization22:
-          Value: true
-        camera_visualization23:
-          Value: true
-        camera_visualization24:
-          Value: true
-        camera_visualization25:
-          Value: true
-        camera_visualization26:
-          Value: true
-        camera_visualization27:
-          Value: true
-        camera_visualization28:
-          Value: true
-        camera_visualization29:
-          Value: true
-        camera_visualization3:
-          Value: true
-        camera_visualization30:
-          Value: true
-        camera_visualization31:
-          Value: true
-        camera_visualization4:
-          Value: true
-        camera_visualization5:
-          Value: true
-        camera_visualization6:
-          Value: true
-        camera_visualization7:
-          Value: true
-        camera_visualization8:
-          Value: true
-        camera_visualization9:
-          Value: true
         cuchilla_link:
           Value: true
         fl_link:
@@ -244,6 +116,8 @@ Visualization Manager:
           Value: true
         map:
           Value: true
+        odom:
+          Value: true
         tubo_link:
           Value: true
       Marker Scale: 0.30000001192092896
@@ -253,109 +127,28 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          camera0:
-            camera_visualization0:
-              {}
-          camera1:
-            camera_visualization1:
-              {}
-          camera10:
-            camera_visualization10:
-              {}
-          camera11:
-            camera_visualization11:
-              {}
-          camera12:
-            camera_visualization12:
-              {}
-          camera13:
-            camera_visualization13:
-              {}
-          camera14:
-            camera_visualization14:
-              {}
-          camera15:
-            camera_visualization15:
-              {}
-          camera16:
-            camera_visualization16:
-              {}
-          camera17:
-            camera_visualization17:
-              {}
-          camera18:
-            camera_visualization18:
-              {}
-          camera19:
-            camera_visualization19:
-              {}
-          camera2:
-            camera_visualization2:
-              {}
-          camera20:
-            camera_visualization20:
-              {}
-          camera21:
-            camera_visualization21:
-              {}
-          camera22:
-            camera_visualization22:
-              {}
-          camera23:
-            camera_visualization23:
-              {}
-          camera24:
-            camera_visualization24:
-              {}
-          camera25:
-            camera_visualization25:
-              {}
-          camera26:
-            camera_visualization26:
-              {}
-          camera27:
-            camera_visualization27:
-              {}
-          camera28:
-            camera_visualization28:
-              {}
-          camera29:
-            camera_visualization29:
-              {}
-          camera3:
-            camera_visualization3:
-              {}
-          camera30:
-            camera_visualization30:
-              {}
-          camera31:
-            camera_visualization31:
-              {}
-          camera4:
-            camera_visualization4:
-              {}
-          camera5:
-            camera_visualization5:
-              {}
-          camera6:
-            camera_visualization6:
-              {}
-          camera7:
-            camera_visualization7:
-              {}
-          camera8:
-            camera_visualization8:
-              {}
-          camera9:
-            camera_visualization9:
-              {}
+          odom:
+            base_link:
+              bl_link:
+                {}
+              br_link:
+                {}
+              fl_link:
+                {}
+              fr_link:
+                {}
+              lidar_link:
+                {}
+              tubo_link:
+                cuchilla_link:
+                  {}
       Update Interval: 0
       Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic:
         Depth: 5
@@ -370,6 +163,48 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map_updates
+      Use Timestamp: false
+      Value: false
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: true
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /global_costmap/costmap
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /global_costmap/costmap_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: true
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /local_costmap/costmap
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /local_costmap/costmap_updates
       Use Timestamp: false
       Value: true
   Enabled: true
@@ -393,25 +228,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 30.259836196899414
+      Distance: 10.542728424072266
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -3.179138660430908
+        Y: 0.5614088773727417
+        Z: 0.13627956807613373
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2853977680206299
+      Pitch: 1.4503976106643677
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.63355016708374
+      Yaw: 4.70855188369751
     Saved: ~
 Window Geometry:
   Displays:

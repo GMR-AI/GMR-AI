@@ -1,5 +1,6 @@
 import launch
 from launch.actions import IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 import os
@@ -7,6 +8,7 @@ import os
 def generate_launch_description():
     # ------- Variables -------
     pkg_share = FindPackageShare(package='gmrai_description').find('gmrai_description')
+    param_file = LaunchConfiguration('params_file', default=os.path.join(pkg_share, 'config', 'nav2_params.yaml'))
 
     # ------- Launch Files -------
     simulation_nodes = IncludeLaunchDescription(
@@ -19,20 +21,27 @@ def generate_launch_description():
                                        '/transforms.launch.py']),
         launch_arguments={}.items(),
     )
-    visualization_nodes = IncludeLaunchDescription(
+    nav2_nodes = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
-                                       '/visualization.launch.py']),
-        launch_arguments={}.items(),
+                                       '/navigation.launch.py']),
+        launch_arguments={'params_file': param_file,
+                          'use_sim_time': 'True'}.items()
     )
     vision_nodes = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
                                        '/vision.launch.py']),
         launch_arguments={}.items(),
     )
+    visualization_nodes = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(pkg_share, 'launch'),
+                                       '/visualization.launch.py']),
+        launch_arguments={}.items(),
+    )
     
     return launch.LaunchDescription([
         simulation_nodes,
         transform_nodes,
+        nav2_nodes,
         vision_nodes,
         visualization_nodes,
     ])

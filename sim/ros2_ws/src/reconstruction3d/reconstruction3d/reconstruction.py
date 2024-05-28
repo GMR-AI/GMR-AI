@@ -19,7 +19,7 @@ bridge = CvBridge()
 class Reconstruction(Node):
     def __init__(self):
         super().__init__('reconstruction_node')
-        time.sleep(10)
+        
         self.data_path = 'data'
         self.available = True
 
