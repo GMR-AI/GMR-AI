@@ -50,7 +50,7 @@ def generate_launch_description():
                                        '/visualization.launch.py']),
         launch_arguments={}.items(),
     )
-    
+
     return launch.LaunchDescription([
         simulation_nodes,
         transform_nodes,

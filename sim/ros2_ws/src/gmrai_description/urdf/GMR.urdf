@@ -3,313 +3,272 @@
     <link name="base_link">
         <inertial>
             <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="0.505" ixy="0.0" iyy="0.505" izz="1.0" iyz="0.0" ixz="0.0" />
+            <inertia izz="1.0" iyz="0.0" ixz="0.0" iyy="0.505" ixx="0.505" ixy="0.0" />
             <mass value="6.0" />
         </inertial>
         <collision name="GMR_AI">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
                 <box size="1.000000 1.000000 0.200000" />
             </geometry>
         </collision>
         <visual name="base">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.009178 0.000075 -0.103667" />
+            <origin xyz="-0.009178 0.000075 -0.103667" rpy="-1.570796 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_base_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_base_vis_1.dae" />
             </geometry>
             <material name="base_material">
                 <color rgba="0.741000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="base">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.009178 0.000075 -0.103667" />
+            <origin xyz="-0.009178 0.000075 -0.103667" rpy="-1.570796 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_base_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_base_vis_2.dae" />
             </geometry>
             <material name="base_material">
                 <color rgba="0.490000 0.082000 0.082000 1.0" />
             </material>
         </visual>
         <visual name="base">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.009178 0.000075 -0.103667" />
+            <origin xyz="-0.009178 0.000075 -0.103667" rpy="-1.570796 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_base_vis_3.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_base_vis_3.dae" />
             </geometry>
             <material name="base_material">
                 <color rgba="1.000000 1.000000 1.000000 1.0" />
             </material>
         </visual>
         <visual name="base">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.009178 0.000075 -0.103667" />
+            <origin xyz="-0.009178 0.000075 -0.103667" rpy="-1.570796 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_base_vis_4.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_base_vis_4.dae" />
             </geometry>
             <material name="base_material">
                 <color rgba="1.000000 1.000000 1.000000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="br_joint" type="continuous">
+    <joint type="continuous" name="br_joint">
         <axis xyz="0 0 1" />
         <parent link="base_link" />
         <child link="br_link" />
-        <origin rpy="0.000000 1.570796 0.000000" xyz="0.431000 -0.345000 -0.320000" />
+        <origin xyz="-0.355000 -0.435000 -0.320000" rpy="1.570796 1.570796 0.000000" />
     </joint>
     <link name="br_link">
         <inertial>
             <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="0.0035166666666667" ixy="0.0" iyy="0.0035166666666667" izz="0.005625" iyz="0.0" ixz="0.0" />
+            <inertia izz="0.005625" iyz="0.0" ixz="0.0" iyy="0.0035166666666667" ixx="0.0035166666666667" ixy="0.0" />
             <mass value="0.5" />
         </inertial>
         <collision name="br_link">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
                 <cylinder radius="0.15" length="0.13" />
             </geometry>
         </collision>
         <visual name="llantas_ruedas">
-            <origin rpy="-0.000000 -1.570796 0.000000" xyz="-0.000141 -0.000922 0.005884" />
+            <origin xyz="-0.000141 -0.000922 0.005884" rpy="0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_vis_1.dae" />
             </geometry>
             <material name="llantas_ruedas_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="llantas_ruedas">
-            <origin rpy="-0.000000 -1.570796 0.000000" xyz="-0.000141 -0.000922 0.005884" />
+            <origin xyz="-0.000141 -0.000922 0.005884" rpy="0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_vis_2.dae" />
             </geometry>
             <material name="llantas_ruedas_material">
                 <color rgba="0.780000 0.780000 0.780000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="bl_joint" type="continuous">
+    <joint type="continuous" name="bl_joint">
         <axis xyz="0 0 1" />
         <parent link="base_link" />
         <child link="bl_link" />
-        <origin rpy="3.141593 1.570796 0.000000" xyz="-0.460000 -0.345000 -0.320000" />
+        <origin xyz="-0.355000 0.445000 -0.320000" rpy="-1.570796 1.570796 0.000000" />
     </joint>
     <link name="bl_link">
         <inertial>
-            <origin rpy="3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="0.0035166666666667" ixy="0.0" iyy="0.0035166666666667" izz="0.005625" iyz="0.0" ixz="0.0" />
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.000000" />
+            <inertia izz="0.005625" iyz="0.0" ixz="0.0" iyy="0.0035166666666667" ixx="0.0035166666666667" ixy="0.0" />
             <mass value="0.5" />
         </inertial>
         <collision name="bl_link">
-            <origin rpy="3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 -0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
                 <cylinder radius="0.15" length="0.13" />
             </geometry>
         </collision>
         <visual name="llantas_ruedas">
-            <origin rpy="-0.000000 -1.570796 0.000000" xyz="-0.000141 -0.000720 -0.012403" />
+            <origin xyz="-0.000141 -0.000720 -0.012403" rpy="-0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_2_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_2_vis_1.dae" />
             </geometry>
             <material name="llantas_ruedas_2_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="llantas_ruedas">
-            <origin rpy="-0.000000 -1.570796 0.000000" xyz="-0.000141 -0.000720 -0.012403" />
+            <origin xyz="-0.000141 -0.000720 -0.012403" rpy="-0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_2_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_2_vis_2.dae" />
             </geometry>
             <material name="llantas_ruedas_2_material">
                 <color rgba="0.780000 0.780000 0.780000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="fr_joint" type="continuous">
+    <joint type="continuous" name="fr_joint">
         <axis xyz="0 0 1" />
         <parent link="base_link" />
         <child link="fr_link" />
-        <origin rpy="0.000000 1.570796 0.000000" xyz="0.431000 0.345000 -0.320000" />
+        <origin xyz="0.335000 -0.435000 -0.320000" rpy="1.570796 1.570796 0.000000" />
     </joint>
     <link name="fr_link">
         <inertial>
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="0.0035166666666667" ixy="0.0" iyy="0.0035166666666667" izz="0.005625" iyz="0.0" ixz="0.0" />
+            <origin rpy="3.141593 3.141593 3.141593" xyz="0.000000 0.000000 0.000000" />
+            <inertia izz="0.005625" iyz="0.0" ixz="0.0" iyy="0.0035166666666667" ixx="0.0035166666666667" ixy="0.0" />
             <mass value="0.5" />
         </inertial>
         <collision name="fr_link">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 0.000000" rpy="3.141593 3.141593 3.141593" />
             <geometry>
                 <cylinder radius="0.15" length="0.13" />
             </geometry>
         </collision>
         <visual name="llantas_ruedas">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.000141 0.000217 0.000620" />
+            <origin xyz="-0.000141 0.000217 0.000620" rpy="-0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_3_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_3_vis_1.dae" />
             </geometry>
             <material name="llantas_ruedas_3_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="llantas_ruedas">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.000141 0.000217 0.000620" />
+            <origin xyz="-0.000141 0.000217 0.000620" rpy="-0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_3_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_3_vis_2.dae" />
             </geometry>
             <material name="llantas_ruedas_3_material">
                 <color rgba="0.780000 0.780000 0.780000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="fl_joint" type="continuous">
+    <joint type="continuous" name="fl_joint">
         <axis xyz="0 0 1" />
         <parent link="base_link" />
         <child link="fl_link" />
-        <origin rpy="-3.141593 1.570796 0.000000" xyz="-0.435000 0.345000 -0.320000" />
+        <origin xyz="0.335000 0.430000 -0.320000" rpy="-1.570796 1.570796 0.000000" />
     </joint>
     <link name="fl_link">
         <inertial>
-            <origin rpy="-3.141593 3.141593 3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="0.0035166666666667" ixy="0.0" iyy="0.0035166666666667" izz="0.005625" iyz="0.0" ixz="0.0" />
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 -0.000000 0.000000" />
+            <inertia izz="0.005625" iyz="0.0" ixz="0.0" iyy="0.0035166666666667" ixx="0.0035166666666667" ixy="0.0" />
             <mass value="0.5" />
         </inertial>
         <collision name="fl_link">
-            <origin rpy="-3.141593 3.141593 3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 -0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
                 <cylinder radius="0.15" length="0.13" />
             </geometry>
         </collision>
         <visual name="llantas_ruedas">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.000141 0.000363 -0.003502" />
+            <origin xyz="-0.000141 0.000363 -0.003502" rpy="0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_4_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_4_vis_1.dae" />
             </geometry>
             <material name="llantas_ruedas_4_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="llantas_ruedas">
-            <origin rpy="0.000000 -1.570796 0.000000" xyz="-0.000141 0.000363 -0.003502" />
+            <origin xyz="-0.000141 0.000363 -0.003502" rpy="0.000000 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_llantas_ruedas_4_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_llantas_ruedas_4_vis_2.dae" />
             </geometry>
             <material name="llantas_ruedas_4_material">
                 <color rgba="0.780000 0.780000 0.780000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="tubo_joint" type="prismatic">
+    <joint type="prismatic" name="tubo_joint">
         <axis xyz="0 0 1" />
-        <limit effort="50.0" upper="1.0" lower="-0.0" velocity="1.0" />
+        <limit upper="1.0" velocity="1.0" effort="50.0" lower="-0.0" />
         <parent link="base_link" />
         <child link="tubo_link" />
-        <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.238000" />
+        <origin xyz="0.000000 0.000000 -0.238000" rpy="-3.141593 3.141593 -3.141593" />
     </joint>
     <link name="tubo_link">
         <inertial>
             <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="8.5833333333333e-06" ixy="0.0" iyy="8.5833333333333e-06" izz="5e-07" iyz="0.0" ixz="0.0" />
+            <inertia izz="5e-07" iyz="0.0" ixz="0.0" iyy="8.5833333333333e-06" ixx="8.5833333333333e-06" ixy="0.0" />
             <mass value="0.01" />
         </inertial>
         <collision name="tubo_link">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
                 <cylinder radius="0.03" length="0.2288" />
             </geometry>
         </collision>
         <visual name="tubo">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.004268" />
+            <origin xyz="0.000000 0.000000 -0.004268" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_tubo_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_tubo_vis_1.dae" />
             </geometry>
             <material name="tubo_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="tubo">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.004268" />
+            <origin xyz="0.000000 0.000000 -0.004268" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_tubo_vis_2.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_tubo_vis_2.dae" />
             </geometry>
             <material name="tubo_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
         <visual name="tubo">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.004268" />
+            <origin xyz="0.000000 0.000000 -0.004268" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_tubo_vis_3.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_tubo_vis_3.dae" />
             </geometry>
             <material name="tubo_material">
                 <color rgba="0.000000 0.000000 0.000000 1.0" />
             </material>
         </visual>
     </link>
-    <joint name="cuchilla_joint" type="continuous">
+    <joint type="continuous" name="cuchilla_joint">
         <axis xyz="0 0 1" />
         <parent link="tubo_link" />
         <child link="cuchilla_link" />
-        <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.087000" />
+        <origin xyz="0.000000 0.000000 -0.087000" rpy="-3.141593 3.141593 -3.141593" />
     </joint>
     <link name="cuchilla_link">
         <inertial>
             <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <inertia ixx="6.25e-06" ixy="0.0" iyy="6.25e-06" izz="1.25e-05" iyz="0.0" ixz="0.0" />
+            <inertia izz="1.25e-05" iyz="0.0" ixz="0.0" iyy="6.25e-06" ixx="6.25e-06" ixy="0.0" />
             <mass value="0.01" />
         </inertial>
         <collision name="cuchilla_link">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
+            <origin xyz="0.000000 0.000000 0.000000" rpy="-3.141593 3.141593 -3.141593" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_cuchilla_link_coll_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_cuchilla_link_coll_1.dae" />
             </geometry>
         </collision>
         <visual name="cuchilla">
-            <origin rpy="0.638370 -1.570796 0.000000" xyz="0.000000 -0.010908 -0.001040" />
+            <origin xyz="0.000000 -0.010908 -0.001040" rpy="0.638370 -1.570796 0.000000" />
             <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_cuchilla_vis_1.dae" />
+                <mesh filename="file:///home/adriangt2001/GMR-AI/sim/ros2_ws/src/gmrai_description/urdf/GMR_cuchilla_vis_1.dae" />
             </geometry>
             <material name="cuchilla_material">
                 <color rgba="1.000000 1.000000 1.000000 1.0" />
-            </material>
-        </visual>
-    </link>
-    <joint name="lidar_joint" type="fixed">
-        <axis xyz="0 0 1" />
-        <parent link="base_link" />
-        <child link="lidar_link" />
-        <origin rpy="-3.141593 3.141593 -1.570796" xyz="0.000000 0.000000 0.200000" />
-    </joint>
-    <link name="lidar_link">
-        <collision name="lidar_link">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 0.000000" />
-            <geometry>
-                <cylinder radius="0.005" length="0.01" />
-            </geometry>
-        </collision>
-        <visual name="body">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.015000" />
-            <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_body_vis_1.dae" />
-            </geometry>
-            <material name="body_material">
-                <color rgba="0.217647 0.217647 0.217647 1.0" />
-            </material>
-        </visual>
-        <visual name="body">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.015000" />
-            <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_body_vis_2.dae" />
-            </geometry>
-            <material name="body_material">
-                <color rgba="0.217647 0.217647 0.217647 1.0" />
-            </material>
-        </visual>
-        <visual name="body">
-            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000000 0.000000 -0.015000" />
-            <geometry>
-                <mesh filename="package://gmrai_description/urdf/GMR_body_vis_3.dae" />
-            </geometry>
-            <material name="body_material">
-                <color rgba="1.000000 1.000000 0.111111 1.0" />
             </material>
         </visual>
     </link>

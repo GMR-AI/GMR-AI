@@ -5,8 +5,8 @@
       <author>Assimp</author>
       <authoring_tool>Assimp Exporter</authoring_tool>
     </contributor>
-    <created>2024-05-19T17:26:05</created>
-    <modified>2024-05-19T17:26:05</modified>
+    <created>2024-05-29T20:33:14</created>
+    <modified>2024-05-29T20:33:14</modified>
     <unit name="meter" meter="1" />
     <up_axis>Y_UP</up_axis>
   </asset>
@@ -21,10 +21,10 @@
               <color sid="emission">0   0   0   0</color>
             </emission>
             <ambient>
-              <color sid="ambient">0.740999997   0   0   0.017578125</color>
+              <color sid="ambient">0.740999997   0   0   -1.23401999</color>
             </ambient>
             <diffuse>
-              <color sid="diffuse">0.740999997   0   0   0.017578125</color>
+              <color sid="diffuse">0.740999997   0   0   -1.23401999</color>
             </diffuse>
             <specular>
               <color sid="specular">0   0   0   -1.25961399</color>
