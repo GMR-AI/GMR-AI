@@ -47,6 +47,10 @@ def main():
     rclpy.init()
     coppelia_node = CoppeliaNode()
     coppelia_node.run()
-    rclpy.spin(coppelia_node)
+    try:
+        rclpy.spin(coppelia_node)
+    except:
+        pass
+    coppelia_node.destroy_node()
     rclpy.shutdown()
         

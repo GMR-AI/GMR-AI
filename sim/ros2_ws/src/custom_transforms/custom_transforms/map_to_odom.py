@@ -56,6 +56,9 @@ class Map2OdomReplicatorNode(Node):
 def main():
     rclpy.init()
     map2odom_replicator_node = Map2OdomReplicatorNode()
-    rclpy.spin(map2odom_replicator_node)
+    try:
+        rclpy.spin(map2odom_replicator_node)
+    except:
+        pass
     map2odom_replicator_node.destroy_node()
     rclpy.shutdown()

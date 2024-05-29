@@ -150,6 +150,9 @@ def main():
     rclpy.init()
 
     recon_node = Reconstruction()
-    rclpy.spin(recon_node)
+    try:
+        rclpy.spin(recon_node)
+    except:
+        pass
     recon_node.destroy_node()
     rclpy.shutdown()

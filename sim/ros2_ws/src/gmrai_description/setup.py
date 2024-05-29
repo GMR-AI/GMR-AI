@@ -16,7 +16,8 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
         (os.path.join('share', package_name, 'urdf'), glob('urdf/*')),
         (os.path.join('share', package_name, 'config'), glob('config/*')),
-        (os.path.join('share', package_name, 'rviz'), glob('rviz/*'))
+        (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
+        (os.path.join('share', package_name, 'behavior_trees'), glob('behavior_trees/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -27,6 +28,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'robot_manager = gmrai_description.robot_manager:main',
         ],
     },
 )

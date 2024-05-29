@@ -44,7 +44,7 @@ bt_navigator:
     use_sim_time: True
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: /odom
+    odom_topic: /gmr/odom
     bt_loop_duration: 10
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
@@ -142,11 +142,11 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.26
+      max_vel_x: 4.0
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 3.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.26
+      max_speed_xy: 4.0
       min_speed_theta: 0.0
       # Add high threshold velocity for turtlebot 3 issue.
       # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
@@ -199,8 +199,7 @@ local_costmap:
         inflation_radius: 0.55
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: "/map"
-        map_subscribe_transient_local: False
+        map_subscribe_transient_local: True
       always_send_full_costmap: True
 
 global_costmap:
@@ -217,8 +216,7 @@ global_costmap:
       plugins: ["static_layer", "inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: "/map"
-        map_subscribe_transient_local: False
+        map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
@@ -307,8 +305,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
+    max_velocity: [3.0, 0.0, 4.0]
+    min_velocity: [-3.0, 0.0, -4.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"

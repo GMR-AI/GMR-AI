@@ -19,6 +19,7 @@
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>nav2</exec_depend>
+  <exec_depend>nav2_bt_navigator</exec_depend>
 
   <!--Mysterious dependencies-->
   <exec_depend>xacro</exec_depend>

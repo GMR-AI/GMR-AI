@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 
 from custom_interfaces.msg import StringStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
@@ -23,7 +24,9 @@ class ObjectDetection(Node):
         self.model_subscription = self.create_subscription(StringStamped, 'model/path', self.model_callback, 10)
         self.model_subscription
 
-        self.map_publisher = self.create_publisher(OccupancyGrid, 'map', 10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+
+        self.map_publisher = self.create_publisher(OccupancyGrid, 'map', qos_profile=qos)
         self.robot_position_publisher = self.create_publisher(Odometry, 'odom_real', 10)
 
         self.detection_model = YOLO(self.model_file.get_parameter_value().string_value)
@@ -120,6 +123,9 @@ def main():
     rclpy.init()
 
     detection_node = ObjectDetection()
-    rclpy.spin(detection_node)
+    try:
+        rclpy.spin(detection_node)
+    except:
+        pass
     detection_node.destroy_node()
     rclpy.shutdown()
