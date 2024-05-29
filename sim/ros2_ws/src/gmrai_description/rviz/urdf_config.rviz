@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Map3
       Splitter Ratio: 0.5
     Tree Height: 302
 Visualization Manager:
@@ -77,11 +78,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        lidar_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         tubo_link:
           Alpha: 1
           Show Axes: false
@@ -112,8 +108,6 @@ Visualization Manager:
           Value: true
         fr_link:
           Value: true
-        lidar_link:
-          Value: true
         map:
           Value: true
         odom:
@@ -136,8 +130,6 @@ Visualization Manager:
               fl_link:
                 {}
               fr_link:
-                {}
-              lidar_link:
                 {}
               tubo_link:
                 cuchilla_link:
@@ -167,20 +159,20 @@ Visualization Manager:
       Value: false
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: true
       Enabled: true
       Name: Map
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /global_costmap/costmap
       Update Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /global_costmap/costmap_updates
@@ -188,13 +180,13 @@ Visualization Manager:
       Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: true
       Enabled: true
       Name: Map
       Topic:
         Depth: 5
-        Durability Policy: Volatile
+        Durability Policy: Transient Local
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
@@ -256,16 +248,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 24.42269515991211
+      Distance: 12.104278564453125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.11066088080406189
-        Y: 2.057274341583252
-        Z: 0.14830288290977478
+        X: -2.3532140254974365
+        Y: 0.7507501840591431
+        Z: 0.12822675704956055
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
