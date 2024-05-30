@@ -1,0 +1,4 @@
+# Request
+---
+bool available
+string path

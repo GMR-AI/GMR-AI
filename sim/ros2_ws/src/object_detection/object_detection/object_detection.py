@@ -40,7 +40,7 @@ class ObjectDetection(Node):
 
     def model_callback(self, msg):
         header = msg.header
-        ply_path = msg.data
+        ply_path = msg.data+'.ply'
         image = ply2jpg(ply_path)
         robot_mask, obstacle_mask = segmentation(self.detection_model, image)
 

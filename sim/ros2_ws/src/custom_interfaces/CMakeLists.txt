@@ -12,13 +12,15 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ImageCamInfo.msg"
   "msg/ImageCamInfoGroup.msg"
   "msg/StringStamped.msg"
-  DEPENDENCIES sensor_msgs # Add packages that above messages depend on
+  "srv/AskModelPath.srv"
+  DEPENDENCIES sensor_msgs std_msgs # Add packages that above messages depend on
 )
 
 if(BUILD_TESTING)

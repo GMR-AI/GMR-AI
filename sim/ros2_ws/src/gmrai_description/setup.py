@@ -2,6 +2,7 @@ from setuptools import find_packages, setup
 
 import os
 from glob import glob
+from pathlib import Path
 
 package_name = 'gmrai_description'
 
@@ -18,6 +19,7 @@ setup(
         (os.path.join('share', package_name, 'config'), glob('config/*')),
         (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
         (os.path.join('share', package_name, 'behavior_trees'), glob('behavior_trees/*')),
+        (os.path.join('share', package_name, 'info'), [str(file) for file in Path('info').glob('*')]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

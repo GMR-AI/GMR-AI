@@ -5,13 +5,18 @@ from action_msgs.msg import GoalStatus
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import Point32, Polygon
 from lifecycle_msgs.srv import GetState
+from custom_interfaces.msg import StringStamped
+from custom_interfaces.srv import AskModelPath
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 import os
 
 from ament_index_python.packages import get_package_share_directory
+
+from gmrai_description.robot_client import *
 
 class TaskResult(Enum):
     UNKNOWN = 0
@@ -27,9 +32,13 @@ class RobotManager(Node):
         self.status = None
         self.feedback = None
         self.behavior_tree = os.path.join(get_package_share_directory('gmrai_description'), 'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml')
-
+        self.model_path = ''
         self.nav_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
-    
+
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.model_subscriber = self.create_subscription(StringStamped, 'model/path', self.model_callback, qos_profile=qos)
+        # self.model_path_client = self.create_client(AskModelPath, 'reconstruction/ask')
+
     def navigate(self, position):
         """Send a NavigateToPose action request."""
         self.get_logger().info("Waiting for 'NavigateToPose' action server")
@@ -60,6 +69,10 @@ class RobotManager(Node):
 
         self.result_future = self.goal_handle.get_result_async()
         return True
+
+    def cancel_navigation(self):
+        cancel_goal_future = self.goal_handle.cancel_goal_async()
+        rclpy.spin_until_future_complete(self, cancel_goal_future)
 
     def is_task_completed(self):
         """Check if the task request of any type is completed yet."""
@@ -98,6 +111,10 @@ class RobotManager(Node):
         else:
             return TaskResult.UNKNOWN
     
+    def get_model_path(self):
+        rclpy.spin_once(self, timeout_sec=1)
+        return self.model_path
+
     def startup(self, node_name = 'bt_navigator'):
         # Waits for the node within the tester namespace to become active
         self.get_logger().info(f'Waiting for {node_name} to become active...')
@@ -118,6 +135,9 @@ class RobotManager(Node):
             time.sleep(2)
         return
 
+    def model_callback(self, msg):
+        self.model_path = msg.data
+
 
 def main():
     rclpy.init()
@@ -125,34 +145,18 @@ def main():
     manager = RobotManager()
     manager.startup()
 
-    # Example position
-    position = [3.0, 0.0, 0.0]
+    manager.get_logger().info('Loading environment...')
 
-    manager.navigate(position)
+    load_dotenv(dotenv_path=os.path.join(get_package_share_directory('gmrai_description'), 'info', '.env'))
+    with open(os.path.join(get_package_share_directory('gmrai_description'), 'info', "robot_data.json"), 'r') as file:
+        data = json.load(file)
+    # gcloud test
+    
+    server_url = os.environ.get("SERVER_URL") # 'http://gmr-ai.oa.r.appspot.com' #
+    # local test
+    #server_url = "http://localhost:8080"
+    client = RobotClient(server_url, data, manager)
+    client.run()
 
-    i = 0
-    while not manager.is_task_completed():
-        # Do something with the feedback
-        i += 1
-        feedback = manager.get_feedback()
-        if feedback and i % 5 == 0:
-            print('Estimated time of arrival: ' + '{0:.0f}'.format(
-                Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
-                + ' seconds.')
-        time.sleep(1)
-    
-    # Do something depending on the return code
-    result = manager.get_result()
-    if result == TaskResult.SUCCEDED:
-        print('Goal succeded!')
-    elif result == TaskResult.CANCELED:
-        print('Goal was canceled!')
-    elif result == TaskResult.FAILED:
-        print('Goal failed!')
-    else:
-        print('Goal has an invalid return status!')
-    
     manager.destroy_node()
     rclpy.shutdown()
-
-

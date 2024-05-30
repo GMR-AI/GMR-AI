@@ -9,9 +9,11 @@ import matplotlib.pyplot as plt
 import rclpy
 import rclpy.logging
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 import subprocess
 
 from custom_interfaces.msg import ImageCamInfoGroup, StringStamped
+from custom_interfaces.srv import AskModelPath
 from cv_bridge import CvBridge
 bridge = CvBridge()
     
@@ -22,11 +24,12 @@ class Reconstruction(Node):
         
         self.data_path = 'data'
         self.available = True
+        self.reconstructed = False
 
         self.default_instantngp_path = os.path.join(os.path.expanduser('~'), "instant-ngp/scripts/run.py")
         self.default_conda_environment = ''
         self.default_images_path = 'data'
-        self.default_ply_path = 'model/gmr'
+        self.default_model_path = 'model/gmr'
 
         self.declare_parameter('instantngp_path', self.default_instantngp_path)
         self.instantngp_path = self.get_parameter('instantngp_path')
@@ -37,13 +40,45 @@ class Reconstruction(Node):
         self.declare_parameter('images_path', self.default_images_path)
         self.images_path = self.get_parameter('images_path')
 
-        self.declare_parameter('ply_path', self.default_ply_path)
-        self.ply_path = self.get_parameter('ply_path')
+        self.declare_parameter('ply_path', self.default_model_path)
+        self.model_path = self.get_parameter('ply_path')
 
         self.image_group_subscriber = self.create_subscription(ImageCamInfoGroup, 'cams/image_group', self.image_group_callback, 10)
         self.image_group_subscriber
 
-        self.model_publisher = self.create_publisher(StringStamped, 'model/path', 10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.model_publisher = self.create_publisher(StringStamped, 'model/path', qos_profile=qos)
+        
+        # self.reconstruct_service = self.create_service(Reconstruct, 'reconstruction/reconstruct', self.reconstruct_callback, qos_profile=qos)
+        self.ask_service = self.create_service(AskModelPath, 'reconstruction/ask', self.ask_path_callback)
+
+    def reconstruct_callback(self, msg): # Do not call this yet
+        info = msg.info
+        i=0
+        cam_info = []
+        header = info.image_cam_info_list[0].cam_info.header
+        for im_cam_info in info.image_cam_info_list:
+            imgmsg = im_cam_info.img
+            cam_info.append(im_cam_info.cam_info)
+            im = bridge.imgmsg_to_cv2(imgmsg, 'bgr8')
+            im = cv2.flip(im, 0)
+            cv2.imwrite('data/images/robot_cam'+'{:02d}'.format(i)+'.jpg', im)
+            i+=1
+        self.cam_info_to_json(cam_info)
+
+        self.build_model()
+        
+        self.publish_model_path(header, "model/gmr")
+
+    def ask_path_callback(self, request, response):
+        self.get_logger().info(f"Sending model path...")
+        if self.reconstructed:
+            response.available = True
+            response.path = self.model_path.get_parameter_value().string_value
+        else:
+            response.available = False
+            response.path = ''
+        return response
 
 
     def image_group_callback(self, image_cam_info_group):
@@ -63,8 +98,9 @@ class Reconstruction(Node):
         
         self.build_model()
         
-        self.publish_model_path(header, "model/gmr.ply")
-        
+        self.publish_model_path(header, self.default_model_path)
+
+        self.reconstructed = True
         self.available = True
 
 
@@ -72,14 +108,14 @@ class Reconstruction(Node):
         if self.conda_environment.get_parameter_value().string_value == '':
             subprocess.run(['python', self.instantngp_path.get_parameter_value().string_value,
                             '--scene', self.images_path.get_parameter_value().string_value,
-                            '--save_mesh', self.ply_path.get_parameter_value().string_value,
+                            '--save_mesh', self.model_path.get_parameter_value().string_value,
                             '--n_steps', '5000'],
                             stdout=subprocess.DEVNULL,)
         else:
             subprocess.run(['conda', 'run', '-n', self.conda_environment.get_parameter_value().string_value,
                             'python', self.instantngp_path.get_parameter_value().string_value,
                             '--scene', self.images_path.get_parameter_value().string_value,
-                            '--save_mesh', self.ply_path.get_parameter_value().string_value,
+                            '--save_mesh', self.model_path.get_parameter_value().string_value,
                             '--n_steps', '5000'],
                             stdout=subprocess.DEVNULL,)
         self.get_logger().info('Finished model')
@@ -150,9 +186,9 @@ def main():
     rclpy.init()
 
     recon_node = Reconstruction()
-    try:
-        rclpy.spin(recon_node)
-    except:
-        pass
+    # try:
+    rclpy.spin(recon_node)
+    # except:
+        # pass
     recon_node.destroy_node()
     rclpy.shutdown()
