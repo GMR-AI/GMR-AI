@@ -190,7 +190,8 @@ class RobotClient:
             else:
                 job_status = State.WORKING
 
-            pos = [3.0, 0.0, 0.0]
+            self.robot_manager.get_logger().info(f"Starting job...")
+            pos = [3.0, 2.0, 0.0]
             self.robot_manager.navigate(pos)
             return
         elif job_status == j_status.CANCEL_JOB:

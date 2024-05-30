@@ -145,18 +145,29 @@ def main():
     manager = RobotManager()
     manager.startup()
 
-    manager.get_logger().info('Loading environment...')
+        # Example position
+    position = [0.0, 3.0, 0.0]
 
-    load_dotenv(dotenv_path=os.path.join(get_package_share_directory('gmrai_description'), 'info', '.env'))
-    with open(os.path.join(get_package_share_directory('gmrai_description'), 'info', "robot_data.json"), 'r') as file:
-        data = json.load(file)
-    # gcloud test
-    
-    server_url = os.environ.get("SERVER_URL") # 'http://gmr-ai.oa.r.appspot.com' #
-    # local test
-    #server_url = "http://localhost:8080"
-    client = RobotClient(server_url, data, manager)
-    client.run()
+    manager.navigate(position)
 
-    manager.destroy_node()
-    rclpy.shutdown()
+    i = 0
+    while not manager.is_task_completed():
+        # Do something with the feedback
+        i += 1
+        feedback = manager.get_feedback()
+        if feedback and i % 5 == 0:
+            print('Estimated time of arrival: ' + '{0:.0f}'.format(
+                Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
+                + ' seconds.')
+        time.sleep(1)
+
+    # Do something depending on the return code
+    result = manager.get_result()
+    if result == TaskResult.SUCCEDED:
+        print('Goal succeded!')
+    elif result == TaskResult.CANCELED:
+        print('Goal was canceled!')
+    elif result == TaskResult.FAILED:
+        print('Goal failed!')
+    else:
+        print('Goal has an invalid return status!')
