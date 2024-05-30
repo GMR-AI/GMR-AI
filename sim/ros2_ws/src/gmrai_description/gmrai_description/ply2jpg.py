@@ -36,9 +36,7 @@ def generate_top_down_image(point_cloud, resolution=(256, 256)):
 
     return topdown_image
 
-def run_convertion(ply_path, image_folder):
+def run_conversion(ply_path, jpg_path):
     point_cloud = read_ply(ply_path)
     image = cv2.cvtColor(generate_top_down_image(point_cloud), cv2.COLOR_RGB2BGR)
-    image_path = os.path.join(image_folder, 'gmr.jpg')
-    cv2.imwrite(image_path, image)
-    return image_path
+    cv2.imwrite(jpg_path, image)

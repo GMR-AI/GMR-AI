@@ -4,25 +4,21 @@ import os
 from enum import Enum
 import argparse
 
-from gmrai_description.ply2jpg import run_convertion
+from gmrai_description.ply2jpg import run_conversion
 
 import trimesh
 import os
 
 from ament_index_python import get_package_share_directory
 
-def convert_obj_to_glb(file_path):
+def convert_obj_to_glb(obj_path, glb_path):
     # Load the OBJ file
-    mesh = trimesh.load(file_path)
-
-    # Change the file extension to .glb
-    glb_file_path = os.path.splitext(file_path)[0] + '.glb'
+    mesh = trimesh.load(obj_path)
 
     # Export the mesh to GLB format
-    mesh.export(glb_file_path, file_type='glb')
+    mesh.export(glb_path, file_type='glb')
 
-    print(f"Converted {file_path} to {glb_file_path}")
-    return glb_file_path
+    print(f"Converted {obj_path} to {glb_path}")
 
 
 # Ordenes que el usuario puede enviar directamente al robot (estas se resetean a NONE una vez el robot reciba la orden)
@@ -147,31 +143,29 @@ class RobotClient:
         if job_status == j_status.NONE:
             return
         elif job_status == j_status.NEW_JOB:
-            self.robot_manager.get_logger().info(f'Making a reconstruction...')
             # Funcion de reconstruccion
-            model_path = self.robot_manager.get_model_path()
-            i = 0
-            while model_path == '':
-                if i >= 200000:
-                    self.robot_manager.get_logger().info(f'Still reconstructing...')
-                    i = 0
-                i+=1
-                model_path = self.robot_manager.get_model_path()
-            
-            self.robot_manager.get_logger().info(f'Reconstruction finished {model_path}')
-            path = convert_obj_to_glb(model_path+'.obj')
-            self.robot_manager.get_logger().info(f'Saved glb to path {path}')
+            model_path = self.robot_manager.get_reconstruction()
+            obj_path = model_path + '.obj'
+            ply_path = model_path + '.ply'
+            glb_path = model_path + '.glb'
+            jpg_path = model_path + '.jpg'
 
-            self.robot_manager.get_logger().info(f'Making the top image...')
-            path = run_convertion(model_path+'.ply', model_path.split('/')[0])
+            self.robot_manager.get_logger().info(f'Converting from obj to glb...')
+            path = convert_obj_to_glb(obj_path, glb_path)
+            self.robot_manager.get_logger().info(f'Converted from obj to glb!')
 
-            time.sleep(2)
+            self.robot_manager.get_logger().info(f'Making top-view from the ply...')
+            run_conversion(ply_path, jpg_path)
+            self.robot_manager.get_logger().info(f'Made top-view from the ply...')
 
-            self.robot_manager.get_logger().info(f'Saved image to path {path}')
-            self.robot_manager.get_logger().info(f'Sending glb: {os.path.splitext(model_path)[0]}.glb')
+            # self.robot_manager.get_logger().info(f'Sending glb...')
             # self.upload_file(os.path.splitext(model_path)[0] + '.glb')
-            self.robot_manager.get_logger().info(f'Sending glb: {os.path.splitext(model_path)[0]}.jpg')
-            self.upload_file(os.path.splitext(model_path)[0] + '.jpg')
+            # self.robot_manager.get_logger().info(f'Sent glb!')
+
+            self.robot_manager.get_logger().info(f'Sending jpg...')
+            self.upload_file(jpg_path)
+            self.robot_manager.get_logger().info(f'Sent jpg!')
+            
             self.send_finished()
             
         elif job_status == j_status.START_JOB:

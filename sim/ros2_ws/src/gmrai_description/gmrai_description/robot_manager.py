@@ -35,9 +35,39 @@ class RobotManager(Node):
         self.model_path = ''
         self.nav_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
 
+        # Clients
+        self.reconstruction_client = self.create_client(AskModelPath, 'reconstruction/services/path')
+        while not self.reconstruction_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Reconstruction service not available, waiting again...')
+        self._reconstruction_request = AskModelPath.Request()
+
+
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.model_subscriber = self.create_subscription(StringStamped, 'model/path', self.model_callback, qos_profile=qos)
         # self.model_path_client = self.create_client(AskModelPath, 'reconstruction/ask')
+
+
+    def get_reconstruction(self):
+        return self.send_reconstruction_request()
+
+
+    # Reconstruction request
+    def send_reconstruction_request(self):
+        """AskModelPath.srv (from custom_interfaces)
+        # Request
+        ---
+        # Response
+        header: http://docs.ros.org/en/api/std_msgs/html/msg/Header.html
+        path: http://docs.ros.org/en/api/std_msgs/html/msg/String.html
+
+        returns: path to file without extension (they are the same with different extensions .ply .obj)
+        """
+        self.get_logger().info("Requesting reconstruction...")
+        self.future = self.reconstruction_client.call_async(self._reconstruction_request)
+        rclpy.spin_until_future_complete(self, self.future)
+        self.get_logger().info("Got reconstruction path!")
+        return self.future().result().path
+
 
     def navigate(self, position):
         """Send a NavigateToPose action request."""
@@ -139,35 +169,40 @@ class RobotManager(Node):
         self.model_path = msg.data
 
 
+def test_new_job(robot_manager: RobotManager):
+    path = robot_manager.get_reconstruction()
+    robot_manager.get_logger().info(f'Reconstruction path: {path}')
+
 def main():
     rclpy.init()
 
     manager = RobotManager()
-    manager.startup()
+    test_new_job(manager)
+    # manager.startup()
 
-        # Example position
-    position = [0.0, 3.0, 0.0]
+    #     # Example position
+    # position = [0.0, 3.0, 0.0]
 
-    manager.navigate(position)
+    # manager.navigate(position)
 
-    i = 0
-    while not manager.is_task_completed():
-        # Do something with the feedback
-        i += 1
-        feedback = manager.get_feedback()
-        if feedback and i % 5 == 0:
-            print('Estimated time of arrival: ' + '{0:.0f}'.format(
-                Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
-                + ' seconds.')
-        time.sleep(1)
+    # i = 0
+    # while not manager.is_task_completed():
+    #     # Do something with the feedback
+    #     i += 1
+    #     feedback = manager.get_feedback()
+    #     if feedback and i % 5 == 0:
+    #         print('Estimated time of arrival: ' + '{0:.0f}'.format(
+    #             Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
+    #             + ' seconds.')
+    #     time.sleep(1)
 
-    # Do something depending on the return code
-    result = manager.get_result()
-    if result == TaskResult.SUCCEDED:
-        print('Goal succeded!')
-    elif result == TaskResult.CANCELED:
-        print('Goal was canceled!')
-    elif result == TaskResult.FAILED:
-        print('Goal failed!')
-    else:
-        print('Goal has an invalid return status!')
+    # # Do something depending on the return code
+    # result = manager.get_result()
+    # if result == TaskResult.SUCCEDED:
+    #     print('Goal succeded!')
+    # elif result == TaskResult.CANCELED:
+    #     print('Goal was canceled!')
+    # elif result == TaskResult.FAILED:
+    #     print('Goal failed!')
+    # else:
+    #     print('Goal has an invalid return status!')
