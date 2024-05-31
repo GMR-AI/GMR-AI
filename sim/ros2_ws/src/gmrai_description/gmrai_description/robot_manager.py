@@ -3,7 +3,6 @@ import time
 
 from action_msgs.msg import GoalStatus
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import Point32, Polygon
 from lifecycle_msgs.srv import GetState
 from std_msgs.msg import Bool
 from custom_interfaces.msg import StringStamped
@@ -40,8 +39,6 @@ class RobotManager(Node):
 
         # Clients
         self.reconstruction_client = self.create_client(AskModelPath, 'reconstruction/services/path')
-        while not self.reconstruction_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Reconstruction service not available, waiting again...')
         self._reconstruction_request = AskModelPath.Request()
 
         # Publishers
@@ -56,7 +53,7 @@ class RobotManager(Node):
         return self.send_reconstruction_request()
 
     def get_feedback(self):
-        return self.feedback()
+        return self.feedback
 
 
     # Reconstruction Request and Start
@@ -65,21 +62,23 @@ class RobotManager(Node):
         # Request
         ---
         # Response
-        header: http://docs.ros.org/en/api/std_msgs/html/msg/Header.html
         path: http://docs.ros.org/en/api/std_msgs/html/msg/String.html
 
         returns: path to file without extension (they are the same with different extensions .ply .obj)
         """
+        while not self.reconstruction_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Reconstruction service not available, waiting again...')
+
         self.get_logger().info("Requesting reconstruction...")
         self.future = self.reconstruction_client.call_async(self._reconstruction_request)
         rclpy.spin_until_future_complete(self, self.future)
         self.get_logger().info("Got reconstruction path!")
-        return self.future().result().path
+        return self.future.result().path
 
 
-    def publish_reconstruction_start(self):
-        msg = Bool
-        msg.data = True
+    def publish_reconstruction_switch(self, switch):
+        msg = Bool()
+        msg.data = switch
         self.reconstruction_switch_publisher.publish(msg)
 
 
@@ -144,7 +143,7 @@ class RobotManager(Node):
     def navigate(self, position):
         """Send a NavigateToPose action request."""
         self.get_logger().info("Waiting for 'NavigateToPose' action server")
-        while not self.nav_client.wait_for_server(timeout_sec=1.0):
+        while not self.navigation_aclient.wait_for_server(timeout_sec=1.0):
             self.get_logger().info("'NavigateToPose' action server not available, waiting...")
 
         goal_msg = NavigateToPose.Goal()
@@ -161,7 +160,7 @@ class RobotManager(Node):
         goal_msg.behavior_tree = self.behavior_tree
         
         self.get_logger().info('Navigating to ' + str(position))
-        send_goal_future = self.nav_client.send_goal_async(goal_msg, self._feedback_callback)
+        send_goal_future = self.navigation_aclient.send_goal_async(goal_msg, self._feedback_callback)
         rclpy.spin_until_future_complete(self, send_goal_future)
         self.goal_handle = send_goal_future.result()
 
@@ -197,10 +196,6 @@ class RobotManager(Node):
     def _feedback_callback(self, msg):
         self.feedback = msg.feedback
         return
-    
-    def get_feedback(self):
-        """Get the pending action feedback message."""
-        return self.feedback
 
     def get_result(self):
         """Get the pending action result message."""
@@ -258,16 +253,17 @@ def test_start_job(robot_manager: RobotManager):
     position = [0.0, 3.0, 0.0]
 
     accepted = robot_manager.start_navigation(position)
+    robot_manager.publish_reconstruction_switch(True)
 
     while not robot_manager.is_navigation_finished():
-        robot_manager.send_reconstruction_request()
         rclpy.spin_once(robot_manager, timeout_sec=0.1)
 
 def main():
     rclpy.init()
 
     manager = RobotManager()
-    test_start_job(manager)
+    test_new_job(manager)
+    # test_start_job(manager)
     # manager.startup()
 
     #     # Example position

@@ -8,7 +8,7 @@ import rclpy.executors
 import rclpy.logging
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 import subprocess
 
@@ -17,6 +17,8 @@ from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskImageCamInfoGroup
 from cv_bridge import CvBridge
 bridge = CvBridge()
+
+import threading
     
 
 class Reconstruction(Node):
@@ -43,33 +45,44 @@ class Reconstruction(Node):
         self.declare_parameter('ply_path', self.default_model_path)
         self.model_path = self.get_parameter('ply_path')
 
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+
+
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
-        group2 = MutuallyExclusiveCallbackGroup()
+        group2 = ReentrantCallbackGroup()
 
         # Publishers
-        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.model_publisher = self.create_publisher(StringStamped, 'reconstruction/publishers/path', qos_profile=qos)
         
         # Subscribers
-        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.reconstruction_switch_subscriber = self.create_subscription(Bool, 'robot_manager/publishers/switch_reconstruction', self.reconstruction_switch_callback, qos_profile=qos, callback_group=group2)
 
         # Services
-        self.reconstruction_service = self.create_service(AskModelPath, 'reconstruction/services/path', self.reconstruction_callback, callback_group=group2)
+        self.reconstruction_service = self.create_service(AskModelPath, 'reconstruction/services/path', self.reconstruction_callback, callback_group=group1)
 
         # Clients
-        self.cameras_client = self.create_client(AskImageCamInfoGroup, 'cameras/services/group_info', callback_group=group1)
+        self.cameras_client = self.create_client(AskImageCamInfoGroup, 'cameras/services/group_info', callback_group=group2)
         self._cameras_request = AskImageCamInfoGroup.Request()
+
 
     # Callbacks
     def reconstruction_switch_callback(self, msg):
-        self.activated = msg.data
-        # Find a way to start a reconstruction loop
+        if not msg.data:
+            self.activated = False
+            return
+        
+        self.activated = True
+        
+        while self.activated:
+            path, header= self._reconstruction()
+            self.publish_model_path(path, header)
 
 
     def reconstruction_callback(self, req, response):
+        self.get_logger().info(f"Received reconstruction request")
         response.path = self._reconstruction()
+        self.get_logger().info(f"Response sent!")
         return response
     
 
@@ -84,18 +97,17 @@ class Reconstruction(Node):
         returns the images cams info
         """
         # Connect to the service
-        while not self.cameras_client.wait_for_service(timeout_sec=0):
+        while not self.cameras_client.wait_for_service(timeout_sec=0.1):
             self.get_logger().info('Cameras service not available, waiting again...')
 
         self.get_logger().info("Requesting cameras and images...")
         self.future = self.cameras_client.call_async(self._cameras_request)
-        rclpy.spin_until_future_complete(self, self.future)
-        self.get_logger().info("Received cameras and images!")
+        self.executor.spin_until_future_complete(self.future)
+        self.get_logger().info(f"Received cameras and images!")
         return self.future.result().image_cam_info_list
 
-
     # Publishings    
-    def publish_model_path(self, header, path):
+    def publish_model_path(self, path, header):
         msg = StringStamped()
         msg.header = header
         msg.data = path
@@ -110,6 +122,7 @@ class Reconstruction(Node):
 
         # Save images and create json
         self.get_logger().info("Preparing images and cameras...")
+        header = info_list[0].cam_info.header
         i = 0
         cam_info = []
         
@@ -127,7 +140,7 @@ class Reconstruction(Node):
         self.get_logger().info("Reconstructing from images...")
         self.build_model()
         self.get_logger().info("Finished reconstruction!")
-        return self.model_path.get_parameter_value().string_value
+        return self.model_path.get_parameter_value().string_value#, header
     
 
     def build_model(self):
@@ -196,14 +209,14 @@ def main():
     rclpy.init()
 
     recon_node = Reconstruction()
-    executor = MultiThreadedExecutor()
+    executor = MultiThreadedExecutor(3)
     executor.add_node(recon_node)
 
-    try:
-        recon_node.get_logger().info("Starting Reconstruction Node")
-        executor.spin()
-    except KeyboardInterrupt:
-        recon_node.get_logger().info("KeyboardInterrupt, shutting down.\n")
+    # try:
+    recon_node.get_logger().info("Starting Reconstruction Node")
+    executor.spin()
+    # except KeyboardInterrupt:
+    #     recon_node.get_logger().info("KeyboardInterrupt, shutting down.\n")
 
     recon_node.destroy_node()
     rclpy.shutdown()
