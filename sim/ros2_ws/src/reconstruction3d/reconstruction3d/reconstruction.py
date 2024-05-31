@@ -2,10 +2,7 @@ import cv2
 import json
 import math
 import os
-import time
 import numpy as np
-import open3d as o3d
-import matplotlib.pyplot as plt
 import rclpy
 import rclpy.executors
 import rclpy.logging
@@ -15,7 +12,8 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 import subprocess
 
-from custom_interfaces.msg import ImageCamInfoGroup, StringStamped
+from std_msgs.msg import Bool
+from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskImageCamInfoGroup
 from cv_bridge import CvBridge
 bridge = CvBridge()
@@ -26,8 +24,7 @@ class Reconstruction(Node):
         super().__init__('reconstruction_node')
         
         self.data_path = 'data'
-        self.available = True
-        self.reconstructed = False
+        self.activated = False
 
         self.default_instantngp_path = os.path.join(os.path.expanduser('~'), "instant-ngp/scripts/run.py")
         self.default_conda_environment = ''
@@ -48,24 +45,35 @@ class Reconstruction(Node):
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
-
-        self.image_group_subscriber = self.create_subscription(ImageCamInfoGroup, 'cams/image_group', self.image_group_callback, 10)
-        self.image_group_subscriber
+        group2 = MutuallyExclusiveCallbackGroup()
 
         # Publishers
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.model_publisher = self.create_publisher(StringStamped, 'reconstruction/publishers/path', qos_profile=qos)
         
+        # Subscribers
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.reconstruction_switch_subscriber = self.create_subscription(Bool, 'robot_manager/publishers/switch_reconstruction', self.reconstruction_switch_callback, qos_profile=qos, callback_group=group2)
+
         # Services
-        self.reconstruction_service = self.create_service(AskModelPath, 'reconstruction/services/path', self.reconstruction_callback)
+        self.reconstruction_service = self.create_service(AskModelPath, 'reconstruction/services/path', self.reconstruction_callback, callback_group=group2)
 
         # Clients
         self.cameras_client = self.create_client(AskImageCamInfoGroup, 'cameras/services/group_info', callback_group=group1)
-        while not self.cameras_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Cameras service not available, waiting again...')
         self._cameras_request = AskImageCamInfoGroup.Request()
 
+    # Callbacks
+    def reconstruction_switch_callback(self, msg):
+        self.activated = msg.data
+        # Find a way to start a reconstruction loop
 
+
+    def reconstruction_callback(self, req, response):
+        response.path = self._reconstruction()
+        return response
+    
+
+    # Requests
     def send_cameras_request(self):
         """AskImageCamInfoGroup.srv (from custom_interfaces)
         # Request
@@ -81,12 +89,22 @@ class Reconstruction(Node):
 
         self.get_logger().info("Requesting cameras and images...")
         self.future = self.cameras_client.call_async(self._cameras_request)
-        rclpy.spin_until_future_complete(self, self.future, timeout_sec=10.0)
+        rclpy.spin_until_future_complete(self, self.future)
         self.get_logger().info("Received cameras and images!")
         return self.future.result().image_cam_info_list
 
 
-    def reconstruction_callback(self, req, response):
+    # Publishings    
+    def publish_model_path(self, header, path):
+        msg = StringStamped()
+        msg.header = header
+        msg.data = path
+
+        self.model_publisher.publish(msg)
+   
+
+    # Other methods
+    def _reconstruction(self):
         # Ask for images and cams position
         info_list = self.send_cameras_request()
 
@@ -98,30 +116,18 @@ class Reconstruction(Node):
         for im_cam_info in info_list:
             img_msg = im_cam_info.img
             cam_info.append(im_cam_info.cam_info)
-            self.get_logger().info("imgmsg_to_cv2")
             im = bridge.imgmsg_to_cv2(img_msg, 'bgr8')
             im = cv2.flip(im, 0)
-            self.get_logger().info(f"Saving image {i}")
             cv2.imwrite(os.path.join(self.images_path.get_parameter_value().string_value, 'robot_cam' + '{:02d}'.format(i) + '.jpg'), im)
-            self.get_logger().info(f"Saved image {i}")
             i += 1
-        self.cam_info_to_json
+        self.cam_info_to_json(cam_info)
         self.get_logger().info("Prepared images and cameras!")
 
-        # Build model and return it in the response
+        # Build model
         self.get_logger().info("Reconstructing from images...")
         self.build_model()
         self.get_logger().info("Finished reconstruction!")
-        response = self.model_path.get_parameter_value().string_value
-        return response
-
-
-    def publish_model_path(self, header, path):
-        msg = StringStamped()
-        msg.header = header
-        msg.data = path
-
-        self.model_publisher.publish(msg)
+        return self.model_path.get_parameter_value().string_value
     
 
     def build_model(self):
@@ -139,35 +145,6 @@ class Reconstruction(Node):
                             '--n_steps', '5000'],
                             stdout=subprocess.DEVNULL,)
         self.get_logger().info('Finished model')
-
-
-    def image_group_callback(self, image_cam_info_group):
-        if not self.available: return
-        self.available = False
-        i = 0
-        cam_info = []
-        header = image_cam_info_group.image_cam_info_list[0].cam_info.header
-        for im_cam_info in image_cam_info_group.image_cam_info_list:
-            imgmsg = im_cam_info.img
-            cam_info.append(im_cam_info.cam_info)
-            im = bridge.imgmsg_to_cv2(imgmsg, 'bgr8')
-            im = cv2.flip(im, 0)
-            cv2.imwrite('data/images/robot_cam'+'{:02d}'.format(i)+'.jpg', im)
-            i+=1
-        self.cam_info_to_json(cam_info)
-        
-        self.build_model()
-        
-        self.publish_model_path(header, self.default_model_path)
-
-        self.reconstructed = True
-        self.available = True
-
-    def send_reconstruct_request(self):
-        self.req.folder = self.data_path
-        self.future = self.reconstruct_client.call_async(self.req)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
 
 
     def cam_info_to_json(self, cam_info):

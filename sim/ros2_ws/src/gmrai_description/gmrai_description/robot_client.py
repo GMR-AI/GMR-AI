@@ -151,7 +151,7 @@ class RobotClient:
             jpg_path = model_path + '.jpg'
 
             self.robot_manager.get_logger().info(f'Converting from obj to glb...')
-            path = convert_obj_to_glb(obj_path, glb_path)
+            convert_obj_to_glb(obj_path, glb_path)
             self.robot_manager.get_logger().info(f'Converted from obj to glb!')
 
             self.robot_manager.get_logger().info(f'Making top-view from the ply...')
@@ -165,7 +165,7 @@ class RobotClient:
             self.robot_manager.get_logger().info(f'Sending jpg...')
             self.upload_file(jpg_path)
             self.robot_manager.get_logger().info(f'Sent jpg!')
-            
+
             self.send_finished()
             
         elif job_status == j_status.START_JOB:
@@ -185,8 +185,8 @@ class RobotClient:
                 job_status = State.WORKING
 
             self.robot_manager.get_logger().info(f"Starting job...")
-            pos = [3.0, 2.0, 0.0]
-            self.robot_manager.navigate(pos)
+            test_position = [3.0, 2.0, 0.0]
+            self.robot_manager.start_navigation(test_position)
             return
         elif job_status == j_status.CANCEL_JOB:
             self.robot_manager.cancel_navigation()
