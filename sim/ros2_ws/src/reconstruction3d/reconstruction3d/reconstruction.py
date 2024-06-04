@@ -68,20 +68,22 @@ class Reconstruction(Node):
 
     # Callbacks
     def reconstruction_switch_callback(self, msg):
+        self.get_logger().info("Switch!")
         if not msg.data:
             self.activated = False
             return
         
         self.activated = True
-        
+        self.get_logger().info("Starting reconstruction loop")
         while self.activated:
             path, header= self._reconstruction()
             self.publish_model_path(path, header)
+        self.get_logger().info("Exiting reconstruction loop")
 
 
     def reconstruction_callback(self, req, response):
         self.get_logger().info(f"Received reconstruction request")
-        response.path = self._reconstruction()
+        response.path, _ = self._reconstruction()
         self.get_logger().info(f"Response sent!")
         return response
     
@@ -140,7 +142,7 @@ class Reconstruction(Node):
         self.get_logger().info("Reconstructing from images...")
         self.build_model()
         self.get_logger().info("Finished reconstruction!")
-        return self.model_path.get_parameter_value().string_value#, header
+        return self.model_path.get_parameter_value().string_value, header
     
 
     def build_model(self):
@@ -209,7 +211,7 @@ def main():
     rclpy.init()
 
     recon_node = Reconstruction()
-    executor = MultiThreadedExecutor(3)
+    executor = MultiThreadedExecutor()
     executor.add_node(recon_node)
 
     # try:

@@ -21,7 +21,7 @@ class ObjectDetection(Node):
         self.declare_parameter('model_file', self.default_model_file)
         self.model_file = self.get_parameter('model_file')
 
-        self.model_subscription = self.create_subscription(StringStamped, 'model/path', self.model_callback, 10)
+        self.model_subscription = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.model_callback, 10)
         self.model_subscription
 
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
