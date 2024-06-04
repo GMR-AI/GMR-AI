@@ -3,8 +3,8 @@ import json
 import os
 from enum import Enum
 import argparse
-
-from gmrai_description.ply2jpg import run_conversion
+from google.cloud import storage
+from ply2jpg import run_conversion
 
 import trimesh
 import os
@@ -19,6 +19,19 @@ def convert_obj_to_glb(obj_path, glb_path):
     mesh.export(glb_path, file_type='glb')
 
     print(f"Converted {obj_path} to {glb_path}")
+
+
+def upload_to_gcs(file_path, destination_blob_name):
+    # Initialize a storage client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(os.environ.get("BUCKET_NAME"))
+    blob = bucket.blob(destination_blob_name)
+
+    # Upload the file
+    blob.upload_from_filename(file_path)
+    blob.make_public()
+
+    print(f"File {file_path} uploaded to {destination_blob_name}.")
 
 
 # Ordenes que el usuario puede enviar directamente al robot (estas se resetean a NONE una vez el robot reciba la orden)
@@ -143,36 +156,17 @@ class RobotClient:
         if job_status == j_status.NONE:
             return
         elif job_status == j_status.NEW_JOB:
-            # Funcion de reconstruccion
-            model_path = self.robot_manager.get_reconstruction()
-            obj_path = model_path + '.obj'
-            ply_path = model_path + '.ply'
-            glb_path = model_path + '.glb'
-            jpg_path = model_path + '.jpg'
-
-            self.robot_manager.get_logger().info(f'Converting from obj to glb...')
-            convert_obj_to_glb(obj_path, glb_path)
-            self.robot_manager.get_logger().info(f'Converted from obj to glb!')
-
-            self.robot_manager.get_logger().info(f'Making top-view from the ply...')
-            run_conversion(ply_path, jpg_path)
-            self.robot_manager.get_logger().info(f'Made top-view from the ply...')
-
-            # self.robot_manager.get_logger().info(f'Sending glb...')
-            # self.upload_file(os.path.splitext(model_path)[0] + '.glb')
-            # self.robot_manager.get_logger().info(f'Sent glb!')
-
-            self.robot_manager.get_logger().info(f'Sending jpg...')
-            self.upload_file(jpg_path)
-            self.robot_manager.get_logger().info(f'Sent jpg!')
-
-            self.send_finished()
+            if job_status == State.WORKING and self.active_job != None:
+                self.robot_manager.get_logger().info("Cancelling current job...")
+                self.cancel_task()
             
+            self.new_job()            
         elif job_status == j_status.START_JOB:
             job_data = data.get('job_data')
             if not job_data:
                 self.robot_manager.get_logger().info(f"Error: Job data was not given, cancelling...")
                 return
+            self.robot_state = State.WORKING
 
             if job_status == State.WORKING and self.active_job != None:
                 if self.active_job.id == job_data['id']:
@@ -189,13 +183,12 @@ class RobotClient:
             self.robot_manager.start_navigation(test_position)
             return
         elif job_status == j_status.CANCEL_JOB:
+            self.robot_manager.get_logger().info(f"Cancelling...")
             self.robot_manager.cancel_navigation()
-            # pos = [ , , 0.0]
-            # self.robot_manager.navigate(pos)
+            self.robot_state = State.IDLE
             return
         elif job_status == j_status.UPDATE_JOB:
-            # Enviar datos del job
-            
+            # Enviar datos del job ?????????
             return
 
 ################# JOBS #################
@@ -204,25 +197,33 @@ class RobotClient:
         return
 
     def cancel_task(self):
-        return
+        self.robot_manager.cancel_navigation()
+        self.send_finished()
     
-    def upload_file(self, file_path):
-        try:
-            with open(file_path, 'rb') as file:
-                files = {'file': file}
-                data = {'code': self.code}
-                response = requests.post(f"{self.server_url}/upload_file", files=files, json=data)
-                if response.status_code == 200:
-                    self.robot_manager.get_logger().info(f"File uploaded successfully.")
-                else:
-                    self.robot_manager.get_logger().info(f"Failed to upload file: {response.status_code} {response.json()}")
-        except Exception as e:
-            self.robot_manager.get_logger().info(f"Error: {e}")
+    def new_job(self):
+        file_noext = self.robot_manager.get_reconstruction()
+        obj_file = file_noext + ".obj"
+        glb_file = file_noext + ".glb"
+        ply_file = file_noext + ".ply"
+        jpg_file = file_noext + ".jpg"
+
+
+        convert_obj_to_glb(obj_file)
+
+        self.robot_manager.get_logger().info(f"Making the top image")
+        run_conversion(ply_file, jpg_file)
+
+        self.robot_manager.get_logger().info(f"Sending data...")
+        upload_to_gcs(glb_file, f"{self.code}_gmr.glb")
+        upload_to_gcs(jpg_file, f"{self.code}_gmr.jpg")
+        self.send_finished()
+
+
     
     def send_finished(self):
         try:
             data = {'code': self.code}
-            response = requests.post(f"{self.server_url}/job_finished", json={'code': self.code})
+            response = requests.post(f"{self.server_url}/job_finished", json=data)
             if response.status_code == 200:
                 self.robot_manager.get_logger().info(f"Task finished successfully.")
             else:
