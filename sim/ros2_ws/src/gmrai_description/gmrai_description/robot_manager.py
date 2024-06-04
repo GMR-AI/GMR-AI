@@ -3,6 +3,7 @@ import time
 
 from action_msgs.msg import GoalStatus
 from nav2_msgs.action import NavigateToPose
+from nav_msgs.msg import OccupancyGrid
 from lifecycle_msgs.srv import GetState
 from std_msgs.msg import Bool
 from custom_interfaces.msg import StringStamped
@@ -13,7 +14,7 @@ from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.executors import MultiThreadedExecutor
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -34,10 +35,13 @@ class RobotManager(Node):
         self.feedback = None
         self.behavior_tree = os.path.join(get_package_share_directory('gmrai_description'), 'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml')
         self.model_path = ''
+        self.reconstruction_active = False
+        self.costmap_ready = False
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
         group2 = MutuallyExclusiveCallbackGroup()
+        group3 = ReentrantCallbackGroup()
 
         # Action Clients
         self.navigation_aclient = ActionClient(self, NavigateToPose, '/navigate_to_pose', callback_group=group1)
@@ -49,13 +53,26 @@ class RobotManager(Node):
         # Publishers
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.reconstruction_switch_publisher = self.create_publisher(Bool, 'robot_manager/publishers/switch_reconstruction', qos_profile=qos, callback_group=group2)
+
+        # Subscribers
+        self.reconstruction_path_subscriber = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.reconstruction_callback, qos_profile=qos, callback_group=group3)
+        self.costmap_subscriber = self.create_subscription(OccupancyGrid, 'global_costmap/costmap', self.costmap_callback, qos_profile=qos, callback_group=group3)
         # self.model_subscriber = self.create_subscription(StringStamped, 'model/path', self.model_callback, qos_profile=qos)
         # self.model_path_client = self.create_client(AskModelPath, 'reconstruction/ask')
 
+    # Checkers
+    def is_costmap_ready(self):
+        return self.costmap_ready
+    
+    def is_reconstruction_active(self):
+        return self.reconstruction_active
 
     # Getters
     def get_reconstruction(self):
+        if self.reconstruction_active:
+            return self.model_path            
         return self.send_reconstruction_request()
+
 
     def get_feedback(self):
         return self.feedback
@@ -85,6 +102,20 @@ class RobotManager(Node):
         msg.data = switch
         self.reconstruction_switch_publisher.publish(msg)
 
+
+    def reconstruction_callback(self, msg):
+        """StringStamped.msg (from custom_interfaces)
+        header: http://docs.ros.org/en/api/std_msgs/html/msg/Header.html
+        data: http://docs.ros.org/en/api/std_msgs/html/msg/String.html
+        """
+
+        self.reconstruction_active = True
+        self.model_path = msg.data
+
+
+    # Costmap Callbacks
+    def costmap_callback(self, _):
+        self.costmap_ready = True
 
     # Navigation Callbacks and Request
     def send_navigation_goal(self, position):
@@ -175,20 +206,19 @@ def test_start_job(robot_manager: RobotManager):
     executor = MultiThreadedExecutor()
     executor.add_node(robot_manager)
 
-    robot_manager.get_logger().info(f"Startup...")
     robot_manager.startup()
-    robot_manager.get_logger().info(f"Startup!")
 
     # Example position
     position = [0.0, 3.0, 0.0]
 
-    robot_manager.get_logger().info(f"Starting reconstruction...")
     robot_manager.publish_reconstruction_switch(True)
-    robot_manager.get_logger().info(f"Started reconstruction!")
 
-    robot_manager.get_logger().info(f"Starting navigation to {position}")
+    while not robot_manager.is_costmap_ready():
+        robot_manager.get_logger().info(f"Waiting to initialize map...")
+        time.sleep(5)
+    robot_manager.get_logger().info(f"Map initialized!")
+
     robot_manager.start_navigation(position)
-    robot_manager.get_logger().info(f"Started navigation to {position}!")
 
     while not robot_manager.is_navigation_finished():
         # To give feedback
