@@ -3,14 +3,12 @@ import time
 
 from action_msgs.msg import GoalStatus
 from nav2_msgs.action import NavigateToPose
-from nav_msgs.msg import OccupancyGrid
 from lifecycle_msgs.srv import GetState
 from std_msgs.msg import Bool
 from custom_interfaces.msg import StringStamped
-from custom_interfaces.srv import AskModelPath
+from custom_interfaces.srv import AskModelPath, AskHomePose
 import rclpy
 from rclpy.action import ActionClient
-from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from rclpy.executors import MultiThreadedExecutor
@@ -36,6 +34,7 @@ class RobotManager(Node):
         self.behavior_tree = os.path.join(get_package_share_directory('gmrai_description'), 'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml')
         self.model_path = ''
         self.reconstruction_active = False
+        self.home_position = [0.0, 0.0, 0.0]
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -48,6 +47,8 @@ class RobotManager(Node):
         # Clients
         self.reconstruction_client = self.create_client(AskModelPath, 'reconstruction/services/path', callback_group=group2)
         self._reconstruction_request = AskModelPath.Request()
+        self.home_client = self.create_client(AskHomePose, 'gmr/services/home_pose', callback_group=group3)
+        self._home_request = AskHomePose.Request()
 
         # Publishers
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
@@ -79,10 +80,10 @@ class RobotManager(Node):
             self.get_logger().info('Reconstruction service not available, waiting again...')
 
         self.get_logger().info("Requesting reconstruction...")
-        self.future = self.reconstruction_client.call_async(self._reconstruction_request)
-        self.executor.spin_until_future_complete(self.future)
+        future = self.reconstruction_client.call_async(self._reconstruction_request)
+        self.executor.spin_until_future_complete(future)
         self.get_logger().info("Got reconstruction path!")
-        return self.future.result().path
+        return future.result().path
 
 
     def publish_reconstruction_switch(self, switch):
@@ -99,6 +100,24 @@ class RobotManager(Node):
 
         self.reconstruction_active = True
         self.model_path = msg.data
+
+
+    # Home position
+    def send_home_pose_request(self):
+        """AskHomePosition.srv (from custom_interfaces)
+        # Request
+        ---
+        # Response
+        pose: http://docs.ros.org/en/api/geometry_msgs/html/msg/Pose.html
+        """
+        while not self.home_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Home position not available, waiting again...")
+        
+        self.get_logger().info(f"Requesting home position...")
+        future = self.reconstruction_client.call_async(self._home_request)
+        self.executor.spin_until_future_complete(future)
+        self.get_logger().info("Got home pose!")
+        return future.result().pose
 
     # Navigation Callbacks and Request
     def send_navigation_goal(self, position):
@@ -152,7 +171,11 @@ class RobotManager(Node):
 
     def cancel_navigation(self):
         cancel_goal_future = self.goal_handle.cancel_goal_async()
-        self.executor.spin_until_future_complete(self, cancel_goal_future)
+        self.executor.spin_until_future_complete(cancel_goal_future)
+        self.go_home()
+
+    def go_home(self):
+        self.send_navigation_goal()
 
     def startup(self, node_name = 'bt_navigator'):
         # Waits for the node within the tester namespace to become active
@@ -176,6 +199,9 @@ class RobotManager(Node):
 
 
 def test_new_job(robot_manager: RobotManager):
+    executor = MultiThreadedExecutor()
+    executor.add_node(robot_manager)
+
     robot_manager.get_logger().info(f'Starting first reconstruction...')
     path = robot_manager.get_reconstruction()
     robot_manager.get_logger().info(f'Reconstruction path: {path}')
@@ -206,6 +232,24 @@ def test_start_job(robot_manager: RobotManager):
     robot_manager.publish_reconstruction_switch(False)
     robot_manager.get_logger().info(f"Finished navigation to {position}")
 
+def test_cancel_job(robot_manager: RobotManager):
+    executor = MultiThreadedExecutor()
+    executor.add_node(robot_manager)
+
+    robot_manager.startup()
+
+    # Example position
+    position = [0.0, 3.0, 0.0]
+
+    robot_manager.publish_reconstruction_switch(True)
+    robot_manager.start_navigation(position)
+
+    while not robot_manager.is_navigation_finished():
+        # To give feedback
+        robot_manager.get_logger().info(f"Feedback: {robot_manager.get_feedback()}")
+        time.sleep(1)
+        continue
+
 def main():
     rclpy.init()
 
@@ -213,5 +257,6 @@ def main():
     
     # test_new_job(manager)
     test_start_job(manager)
+    # test_cancel_job(manager)
 
     rclpy.shutdown()

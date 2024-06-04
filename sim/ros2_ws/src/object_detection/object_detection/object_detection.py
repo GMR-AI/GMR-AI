@@ -1,6 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 
 from custom_interfaces.msg import StringStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
@@ -21,17 +23,22 @@ class ObjectDetection(Node):
         self.declare_parameter('model_file', self.default_model_file)
         self.model_file = self.get_parameter('model_file')
 
-        self.model_subscription = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.model_callback, 10)
-        self.model_subscription
-
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
 
+        # Callback Groups
+        group1 = MutuallyExclusiveCallbackGroup()
+        group2 = ReentrantCallbackGroup()
+
+        # Subscribers
+        self.model_subscription = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.model_callback, qos_profile=qos)
+        # self.costmap_subscriber = self.create_subscription(OccupancyGrid, 'global_costmap/costmap', self.write_costmap, qos_profile=qos)
+     
+        # Publishers
         self.map_publisher = self.create_publisher(OccupancyGrid, 'map', qos_profile=qos)
-        self.robot_position_publisher = self.create_publisher(Odometry, 'odom_real', 10)
+        self.robot_position_publisher = self.create_publisher(Odometry, 'object_detection/publishers/odom_real', qos_profile=qos)
 
         self.detection_model = YOLO(self.model_file.get_parameter_value().string_value)
-
-        self.costmap_subscriber = self.create_subscription(OccupancyGrid, 'global_costmap/costmap', self.write_costmap, 10)
+        
 
     def write_costmap(self, msg):
         image = np.array(msg.data)
@@ -44,16 +51,17 @@ class ObjectDetection(Node):
         image = ply2jpg(ply_path)
         robot_mask, obstacle_mask = segmentation(self.detection_model, image)
 
-        # Publish map
-        if not np.all(obstacle_mask == 0):
-            self.get_logger().info('Map detected')
-            self.publish_occupancy_grid(obstacle_mask, header)
-
         # Publish robot position
         if not np.all(robot_mask == 0):
             self.get_logger().info('Robot Detected')
             real_position, meters_per_pixel = self.estimate_scale_and_transform(robot_mask)
             self.publish_robot_position(real_position, header)
+
+        # Publish map
+        # Need to do some transformation to really adjust map size based on the meter_per_pixel calculated earlier
+        if not np.all(obstacle_mask == 0):
+            self.get_logger().info('Map detected')
+            self.publish_occupancy_grid(obstacle_mask, header)
 
 
     def publish_occupancy_grid(self, binary_image, header):
@@ -85,7 +93,7 @@ class ObjectDetection(Node):
         odom_msg.pose.pose.position.x = real_position[1]
         odom_msg.pose.pose.position.y = real_position[0]
         odom_msg.pose.pose.position.z = 0.0
-        odom_msg.pose.pose.orientation.w = 0.0
+        odom_msg.pose.pose.orientation.w = 1.0
         odom_msg.pose.covariance = self.compute_covariance_matrix(0.1, 2 * np.pi)
 
         odom_msg.twist.twist.linear.x = 0.0
@@ -121,11 +129,11 @@ class ObjectDetection(Node):
 
 def main():
     rclpy.init()
+    executor = MultiThreadedExecutor()
 
     detection_node = ObjectDetection()
-    try:
-        rclpy.spin(detection_node)
-    except:
-        pass
+    executor.add_node(detection_node)
+    executor.spin()
+
     detection_node.destroy_node()
     rclpy.shutdown()

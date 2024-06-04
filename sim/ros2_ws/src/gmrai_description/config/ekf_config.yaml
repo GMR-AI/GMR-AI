@@ -11,9 +11,9 @@ odom2robot_node:
     world_frame: odom
 
     odom0: gmr/odom
-    odom0_config: [true, true, false, # x, y, z
+    odom0_config: [false, false, false, # x, y, z
                    false, false, true,  # roll, pitch, yaw
-                   false, false, false,   # velx, vely, velz
+                   true, true, false,   # velx, vely, velz
                    false, false, false, # velroll, velpitch, velyaw
                    false, false, false] # accelx, accely, accelz
 
@@ -32,18 +32,18 @@ map2odom_node:
     base_link_frame: base_link
     world_frame: map
     
-    odom0: gmr/odom
-    odom0_config: [true, true, false, # x, y, z
-                   false, false, true,  # roll, pitch, yaw
-                   false, false, false,   # velx, vely, velz
-                   false, false, false, # velroll, velpitch, velyaw
-                   false, false, false] # accelx, accely, accelz
-    odom0_queue_size: 10
+    # odom0: gmr/odom
+    # odom0_config: [true, true, false, # x, y, z
+    #                false, false, true,  # roll, pitch, yaw
+    #                false, false, false,   # velx, vely, velz
+    #                false, false, false, # velroll, velpitch, velyaw
+    #                false, false, false] # accelx, accely, accelz
+    # odom0_queue_size: 10
 
-    odom1: odom_real
-    odom1_config: [true, true, false,  # x, y, z
-                   false, false, false, # roll, pitch, yaw
+    odom0: object_detection/publishers/odom_real
+    odom0_config: [true, true, false,  # x, y, z
+                   false, false, true, # roll, pitch, yaw
                    false, false, false, # velx, vely, velz
                    false, false, false, # velroll, velpitch, velyaw
                    false, false, false] # accelx, accely, accelz
-    odom1_queue_size: 1
+    odom0_queue_size: 1

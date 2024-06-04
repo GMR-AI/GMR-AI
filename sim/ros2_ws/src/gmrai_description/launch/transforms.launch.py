@@ -27,7 +27,7 @@ def generate_launch_description():
         name='joint_state_publisher',
         parameters=[
             {'robot_description': Command(['xacro ', LaunchConfiguration('model')])},
-            {'source_list': ['gmr/joint_state']},
+            {'source_list': ['gmr/publishers/joint_state']},
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
@@ -54,20 +54,20 @@ def generate_launch_description():
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
-    map2odom_node = Node(
-        package='robot_localization',
-        executable='ekf_node',
-        name='map2odom_node',
-        output='screen',
-        parameters=[
-            os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
-            {'use_sim_time': LaunchConfiguration('use_sim_time')},
-        ],
-        remappings=[
-            ('/tf', '/tf/update')
-        ],
-        # arguments=['--ros-args', '--log-level', 'debug']
-    )
+    # map2odom_node = Node(
+    #     package='robot_localization',
+    #     executable='ekf_node',
+    #     name='map2odom_node',
+    #     output='screen',
+    #     parameters=[
+    #         os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
+    #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
+    #     ],
+    #     remappings=[
+    #         ('/tf', '/tf/update')
+    #     ],
+    #     # arguments=['--ros-args', '--log-level', 'debug']
+    # )
     map2odom_replicator_node = Node(
         package='custom_transforms',
         executable='map2odom',
@@ -86,6 +86,6 @@ def generate_launch_description():
         # slam_node,
         # map_to_odom_static_publisher_node,
         odom2robot_node,
-        map2odom_node,
+        # map2odom_node,
         map2odom_replicator_node,
     ])

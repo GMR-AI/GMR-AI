@@ -4,7 +4,7 @@ import os
 from enum import Enum
 import argparse
 from google.cloud import storage
-from ply2jpg import run_conversion
+from gmrai_description.ply2jpg import run_conversion
 
 import trimesh
 import os
@@ -97,7 +97,7 @@ class RobotClient:
             if response.status_code == 200:
                 self.log_message(response)
                 if self.connection == CON_STATUS.OFFLINE:
-                    self.robot_manager.get_logger().info(f"Robot is oglbnline.")
+                    self.robot_manager.get_logger().info(f"Robot is online.")
                     self.connection = CON_STATUS.ONLINE
                                 
             elif response.status_code == 201:
@@ -114,6 +114,15 @@ class RobotClient:
             if self.debug:
                 self.robot_manager.get_logger().info(f"Error: {e}")
 
+    def reanudate_status(self):
+        try:
+            response = requests.post(f"{self.server_url}/active_job", json={'code': self.code})
+            data = response.json()
+            if data:
+                self.parse_job_status(data)
+        except requests.RequestException as e:
+            self.robot_manager.get_logger().info(f"Error: {e}")
+        return None
 ################# REQUESTING #################
 
     def send_request(self):
