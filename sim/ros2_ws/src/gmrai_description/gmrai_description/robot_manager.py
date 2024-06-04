@@ -36,7 +36,6 @@ class RobotManager(Node):
         self.behavior_tree = os.path.join(get_package_share_directory('gmrai_description'), 'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml')
         self.model_path = ''
         self.reconstruction_active = False
-        self.costmap_ready = False
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -56,23 +55,12 @@ class RobotManager(Node):
 
         # Subscribers
         self.reconstruction_path_subscriber = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.reconstruction_callback, qos_profile=qos, callback_group=group3)
-        self.costmap_subscriber = self.create_subscription(OccupancyGrid, 'global_costmap/costmap', self.costmap_callback, qos_profile=qos, callback_group=group3)
-        # self.model_subscriber = self.create_subscription(StringStamped, 'model/path', self.model_callback, qos_profile=qos)
-        # self.model_path_client = self.create_client(AskModelPath, 'reconstruction/ask')
-
-    # Checkers
-    def is_costmap_ready(self):
-        return self.costmap_ready
-    
-    def is_reconstruction_active(self):
-        return self.reconstruction_active
 
     # Getters
     def get_reconstruction(self):
         if self.reconstruction_active:
             return self.model_path            
         return self.send_reconstruction_request()
-
 
     def get_feedback(self):
         return self.feedback
@@ -111,11 +99,6 @@ class RobotManager(Node):
 
         self.reconstruction_active = True
         self.model_path = msg.data
-
-
-    # Costmap Callbacks
-    def costmap_callback(self, _):
-        self.costmap_ready = True
 
     # Navigation Callbacks and Request
     def send_navigation_goal(self, position):
@@ -212,12 +195,6 @@ def test_start_job(robot_manager: RobotManager):
     position = [0.0, 3.0, 0.0]
 
     robot_manager.publish_reconstruction_switch(True)
-
-    while not robot_manager.is_costmap_ready():
-        robot_manager.get_logger().info(f"Waiting to initialize map...")
-        time.sleep(5)
-    robot_manager.get_logger().info(f"Map initialized!")
-
     robot_manager.start_navigation(position)
 
     while not robot_manager.is_navigation_finished():
