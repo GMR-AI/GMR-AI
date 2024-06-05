@@ -111,7 +111,6 @@ class ObjectDetection(Node):
         (x, y), radius = cv2.minEnclosingCircle(largest_contour)
         meters_per_pixel = real_radius / radius
         real_world_coords = ((int(x) - robot_mask.shape[0] / 2) * 0.05, (int(y) - robot_mask.shape[1] / 2) * 0.05)
-        self.get_logger().info(f"Robot position: ({real_world_coords})")
         return real_world_coords, meters_per_pixel
 
     def compute_covariance_matrix(self, std_dev_position=0.1, std_dev_orientation=2*np.pi):

@@ -93,7 +93,6 @@ class Map2OdomNode(Node):
     def robot_map_callback(self, msg: Odometry):
         self.map2odom_transform.transform.translation.x = msg.pose.pose.position.x - self.robot_odometry_pose.pose.position.x
         self.map2odom_transform.transform.translation.y = msg.pose.pose.position.y - self.robot_odometry_pose.pose.position.y
-        self.get_logger().info(f"Odom position in map: ({self.map2odom_transform.transform.translation.x}, {self.map2odom_transform.transform.translation.y})")
         # self.map2odom_transform.transform.rotation = msg.pose.pose.orientation
 
     def transform_callback(self, msg):

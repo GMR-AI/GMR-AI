@@ -31,19 +31,6 @@ def generate_launch_description():
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
-    # slam_node = Node(
-    #     package='slam_toolbox',
-    #     executable='async_slam_toolbox_node',
-    #     name='slam_toolbox',
-    #     output='screen',
-    #     parameters=[LaunchConfiguration('slamconfig'),
-    #                 {'use_sim_time': LaunchConfiguration('use_sim_time')}]
-    # )
-    # map_to_odom_static_publisher_node = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     arguments=['--frame-id', 'map', '--child-frame-id', 'odom']
-    # )
     odom2robot_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -54,20 +41,6 @@ def generate_launch_description():
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
         ]
     )
-    # map2odom_node = Node(
-    #     package='robot_localization',
-    #     executable='ekf_node',
-    #     name='map2odom_node',
-    #     output='screen',
-    #     parameters=[
-    #         os.path.join(pkg_share, 'config', 'ekf_config.yaml'),
-    #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
-    #     ],
-    #     remappings=[
-    #         ('/tf', '/tf/update')
-    #     ],
-    #     # arguments=['--ros-args', '--log-level', 'debug']
-    # )
     map2odom_node = Node(
         package='custom_transforms',
         executable='map2odom',
