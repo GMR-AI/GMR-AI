@@ -215,12 +215,12 @@ def test_start_job(robot_manager: RobotManager):
     executor = MultiThreadedExecutor()
     executor.add_node(robot_manager)
 
-    robot_manager.startup()
+    robot_manager.publish_reconstruction_switch(True)
 
     # Example position
     position = [0.0, 3.0, 0.0]
 
-    robot_manager.publish_reconstruction_switch(True)
+    robot_manager.startup()
     robot_manager.start_navigation(position)
 
     while not robot_manager.is_navigation_finished():

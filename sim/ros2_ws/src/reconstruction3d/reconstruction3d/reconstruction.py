@@ -12,7 +12,7 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from rclpy.executors import MultiThreadedExecutor
 import subprocess
 
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Empty
 from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskImageCamInfoGroup
 from cv_bridge import CvBridge
@@ -44,7 +44,7 @@ class Reconstruction(Node):
         self.model_path = self.get_parameter('ply_path')
 
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-
+        qos_volatile = QoSProfile(depth=1, durability=QoSDurabilityPolicy.VOLATILE)
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -52,6 +52,7 @@ class Reconstruction(Node):
 
         # Publishers
         self.model_publisher = self.create_publisher(StringStamped, 'reconstruction/publishers/path', qos_profile=qos)
+        self.reconstruction_start_publisher = self.create_publisher(Empty, 'reconstruction/publishers/start', qos_profile=qos_volatile, callback_group=group2)
         
         # Subscribers
         self.reconstruction_switch_subscriber = self.create_subscription(Bool, 'robot_manager/publishers/switch_reconstruction', self.reconstruction_switch_callback, qos_profile=qos, callback_group=group2)
@@ -74,6 +75,7 @@ class Reconstruction(Node):
         self.activated = True
         self.get_logger().info("Starting reconstruction loop")
         while self.activated:
+            self.reconstruction_start_publisher.publish(Empty())
             path, header= self._reconstruction()
             self.publish_model_path(path, header)
         self.get_logger().info("Exiting reconstruction loop")

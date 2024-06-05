@@ -11,9 +11,9 @@ odom2robot_node:
     world_frame: odom
 
     odom0: gmr/odom
-    odom0_config: [false, false, false, # x, y, z
+    odom0_config: [true, true, false, # x, y, z
                    false, false, true,  # roll, pitch, yaw
-                   true, true, false,   # velx, vely, velz
+                   false, false, false,   # velx, vely, velz
                    false, false, false, # velroll, velpitch, velyaw
                    false, false, false] # accelx, accely, accelz
 

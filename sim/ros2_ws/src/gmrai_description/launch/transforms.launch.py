@@ -68,10 +68,10 @@ def generate_launch_description():
     #     ],
     #     # arguments=['--ros-args', '--log-level', 'debug']
     # )
-    map2odom_replicator_node = Node(
+    map2odom_node = Node(
         package='custom_transforms',
         executable='map2odom',
-        name='map2odom_replicator_node',
+        name='map2odom_node',
     )
 
     return launch.LaunchDescription([
@@ -86,6 +86,6 @@ def generate_launch_description():
         # slam_node,
         # map_to_odom_static_publisher_node,
         odom2robot_node,
-        # map2odom_node,
-        map2odom_replicator_node,
+        map2odom_node,
+        # map2odom_replicator_node,
     ])

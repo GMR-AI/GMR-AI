@@ -13,6 +13,24 @@ from geometry_msgs.msg import TransformStamped
 from rosgraph_msgs.msg import Clock
 from builtin_interfaces.msg import Time
 
+import math
+
+def euler_from_quaternion(x, y, z, w):
+    t0 = 2.0 * (w * x + y * z)
+    t1 = 1.0 - 2.0 * (x * x + y * y)
+    roll_x = math.atan2(t0, t1)
+
+    t2 = 2.0 * (w * y + x * y)
+    t2 = 1.0 if t2 > 1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch_y = math.asin(t2)
+
+    t3 = 2.0 * (w * z + x * y)
+    t4 = 1.0 - 2.0 * (y * y + z * z)
+    yaw_z = math.atan2(t3, t4)
+
+    return roll_x, pitch_y, yaw_z
+
 class Map2OdomNode(Node):
     def __init__(self):
         super().__init__('map2odom_replicator_node')
@@ -49,27 +67,21 @@ class Map2OdomNode(Node):
         group2 = MutuallyExclusiveCallbackGroup()
 
         # Subscribers
-        self.clock_subscriber = self.create_subscription(Clock, '/clock', self.clock_callback, qos_profile=qos, callback_group=group1)
-        self.reconstruction_subscriber = self.create_subscription(StringStamped, "reconstruction/publishers/path", self.reconstruction_callback, qos_profile=qos, callback_group=group1)
-        self.robot_odom_subscriber = self.create_subscription(Odometry, "odometry/filtered", self.robot_odom_callback, qos_profile=qos, callback_group=group1)
-        self.robot_map_subscriber = self.create_subscription(Odometry, "object_detection/publishers/odom_real", self.robot_map_callback, qos_profile=qos, callback_group=group1)
-        
-        # Posición del robot respecto odometría
-        # Posición del robot respecto mapa (sale de object_detection)
-        # Ambas posiciones en el mismo Time Stamp => instante de inicio de reconstrucción para conseguir la posición del robot respecto odometría
-        #
-        # self.map2odom_subscriber = self.create_subscription(TFMessage, '/tf/update', self.transform_callback, qos_profile=qos)
+        self.clock_subscriber = self.create_subscription(Clock, '/clock', self.clock_callback, qos_profile=10, callback_group=group1)
+        self.reconstruction_start_subscriber = self.create_subscription(StringStamped, "reconstruction/publishers/start", self.reconstruction_callback, qos_profile=qos, callback_group=group1)
+        self.robot_odom_subscriber = self.create_subscription(Odometry, "gmr/odom", self.robot_odom_callback, qos_profile=10, callback_group=group2)
+        self.robot_map_subscriber = self.create_subscription(Odometry, "object_detection/publishers/odom_real", self.robot_map_callback, qos_profile=qos, callback_group=group2)
 
         # Broadcasters
-        self.map2odom_broadcaster = TransformBroadcaster(self, qos_profile=qos)
+        self.map2odom_broadcaster = TransformBroadcaster(self, qos=qos)
 
         # Veremos...
-        self.timer = self.create_timer(0.05, self.timer_callback)
+        self.timer = self.create_timer(0.05, self.timer_callback, callback_group=group2)
 
     def clock_callback(self, msg):
         self.stamp = msg.clock
     
-    def reconstruction_callback(self, msg):
+    def reconstruction_callback(self, _):
         self.check_odometry = True
 
     def robot_odom_callback(self, msg):
@@ -79,18 +91,13 @@ class Map2OdomNode(Node):
             self.check_odometry = False
 
     def robot_map_callback(self, msg: Odometry):
-        self.map2odom_transform.header.stamp = msg.header.stamp
         self.map2odom_transform.transform.translation.x = msg.pose.pose.position.x - self.robot_odometry_pose.pose.position.x
-        self.map2odom_transform.transform.translation.x = msg.pose.pose.position.y - self.robot_odometry_pose.pose.position.y
-        # HOW CAN I SUBSTRACT TWO QUATERNIONS CONSIDERING ONLY THE X-Y PLANE????????
-        self.map2odom_broadcaster.sendTransform(self.map2odom_transform)
+        self.map2odom_transform.transform.translation.y = msg.pose.pose.position.y - self.robot_odometry_pose.pose.position.y
+        self.get_logger().info(f"Odom position in map: ({self.map2odom_transform.transform.translation.x}, {self.map2odom_transform.transform.translation.y})")
+        # self.map2odom_transform.transform.rotation = msg.pose.pose.orientation
 
     def transform_callback(self, msg):
         self.map2odom_transform.transform = msg.transforms[0]
-
-
-    
-
 
     def timer_callback(self):
         self.map2odom_transform.header.stamp = self.stamp
@@ -99,10 +106,12 @@ class Map2OdomNode(Node):
 
 def main():
     rclpy.init()
-    map2odom_replicator_node = Map2OdomNode()
+    map2odom_node = Map2OdomNode()
+    executor = MultiThreadedExecutor()
+    executor.add_node(map2odom_node)
     try:
-        rclpy.spin(map2odom_replicator_node)
+        executor.spin()
     except:
         pass
-    map2odom_replicator_node.destroy_node()
+    map2odom_node.destroy_node()
     rclpy.shutdown()

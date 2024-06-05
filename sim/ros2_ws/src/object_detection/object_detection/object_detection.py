@@ -61,10 +61,10 @@ class ObjectDetection(Node):
         # Need to do some transformation to really adjust map size based on the meter_per_pixel calculated earlier
         if not np.all(obstacle_mask == 0):
             self.get_logger().info('Map detected')
-            self.publish_occupancy_grid(obstacle_mask, header)
+            self.publish_occupancy_grid(obstacle_mask, header, meters_per_pixel)
 
 
-    def publish_occupancy_grid(self, binary_image, header):
+    def publish_occupancy_grid(self, binary_image, header, resolution):
         occupancy_grid = OccupancyGrid()
         
         occupancy_grid.header.stamp = header.stamp
@@ -78,7 +78,7 @@ class ObjectDetection(Node):
         occupancy_grid.info.origin.position.z = 0.0
         occupancy_grid.info.origin.orientation.w = 1.0
 
-        occupancy_values = np.where(binary_image == 255, 100, 0).astype(np.int8)
+        occupancy_values = np.where(binary_image == 255, 100, 0).astype(np.int8).transpose()
         occupancy_grid.data = occupancy_values.flatten().tolist()
 
         self.map_publisher.publish(occupancy_grid)
@@ -90,8 +90,8 @@ class ObjectDetection(Node):
         odom_msg.header.frame_id = 'map'
         odom_msg.child_frame_id = 'base_link'
 
-        odom_msg.pose.pose.position.x = real_position[1]
-        odom_msg.pose.pose.position.y = real_position[0]
+        odom_msg.pose.pose.position.x = float(real_position[0])
+        odom_msg.pose.pose.position.y = float(real_position[1])
         odom_msg.pose.pose.position.z = 0.0
         odom_msg.pose.pose.orientation.w = 1.0
         odom_msg.pose.covariance = self.compute_covariance_matrix(0.1, 2 * np.pi)
@@ -106,11 +106,12 @@ class ObjectDetection(Node):
 
     def estimate_scale_and_transform(self, robot_mask):
         real_radius = 1
-        contours, _ = cv2.findContours(robot_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(robot_mask.transpose(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         largest_contour = max(contours, key=cv2.contourArea)
         (x, y), radius = cv2.minEnclosingCircle(largest_contour)
         meters_per_pixel = real_radius / radius
-        real_world_coords = (int(x) * meters_per_pixel, int(y) * meters_per_pixel)
+        real_world_coords = ((int(x) - robot_mask.shape[0] / 2) * 0.05, (int(y) - robot_mask.shape[1] / 2) * 0.05)
+        self.get_logger().info(f"Robot position: ({real_world_coords})")
         return real_world_coords, meters_per_pixel
 
     def compute_covariance_matrix(self, std_dev_position=0.1, std_dev_orientation=2*np.pi):
