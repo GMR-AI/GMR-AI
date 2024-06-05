@@ -1,10 +1,10 @@
 from enum import Enum
 import time
 
-from action_msgs.msg import GoalStatus
-from nav2_msgs.action import NavigateToPose
+from nav2_msgs.action import NavigateToPose, NavigateThroughPoses
 from lifecycle_msgs.srv import GetState
 from std_msgs.msg import Bool
+from geometry_msgs.msg import PoseStamped
 from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskHomePose
 import rclpy
@@ -92,6 +92,10 @@ class RobotManager(Node):
         self.reconstruction_switch_publisher.publish(msg)
 
 
+    def is_reconstruction_ready(self):
+        self.executor.spin_once(timeout_sec=0.100)
+        return self.reconstruction_active
+
     def reconstruction_callback(self, msg):
         """StringStamped.msg (from custom_interfaces)
         header: http://docs.ros.org/en/api/std_msgs/html/msg/Header.html
@@ -124,8 +128,7 @@ class RobotManager(Node):
         self.get_logger().info(f"Preparing goal to {position}")
         goal_msg = NavigateToPose.Goal()
         goal_msg.behavior_tree = self.behavior_tree
-        
-        goal_msg.pose.header.stamp # Fill with sim time
+        goal_msg.pose.header.stamp
         goal_msg.pose.header.frame_id = 'map'
         goal_msg.pose.pose.position.x = position[0]
         goal_msg.pose.pose.position.y = position[1]
@@ -134,10 +137,24 @@ class RobotManager(Node):
         goal_msg.pose.pose.orientation.y = 0.0
         goal_msg.pose.pose.orientation.z = 0.0
         goal_msg.pose.pose.orientation.w = 1.0
+        # for position in positions:
+        #     p = PoseStamped()
+        #     p.header.stamp
+        #     p.header.frame_id = 'map'
+        #     p.pose.position.x = position[0]
+        #     p.pose.position.y = position[1]
+        #     p.pose.position.z = position[2]
+        #     p.pose.orientation.x = 0.0
+        #     p.pose.orientation.y = 0.0
+        #     p.pose.orientation.z = 0.0
+        #     p.pose.orientation.w = 1.0
+        #     goal_msg.poses.append(p)
+
         self.get_logger().info(f"Prepared goal to {position}!")
 
         self.get_logger().info("Sending goal to navigation server...")
         future = self.navigation_aclient.send_goal_async(goal_msg)
+        self.get_logger().info("Spining until future complete...")
         self.executor.spin_until_future_complete(future)
         self.goal_handle = future.result()
 
@@ -149,8 +166,8 @@ class RobotManager(Node):
         self.result_future = self.goal_handle.get_result_async()
         return True
 
-    def start_navigation(self, position):
-        accepted = self.send_navigation_goal(position)
+    def start_navigation(self, positions):
+        accepted = self.send_navigation_goal(positions)
         return accepted
     
     def is_navigation_finished(self):
@@ -217,20 +234,25 @@ def test_start_job(robot_manager: RobotManager):
 
     robot_manager.publish_reconstruction_switch(True)
 
-    # Example position
-    position = [0.0, 3.0, 0.0]
-
-    robot_manager.startup()
-    robot_manager.start_navigation(position)
-
-    while not robot_manager.is_navigation_finished():
-        # To give feedback
-        robot_manager.get_logger().info(f"Feedback: {robot_manager.get_feedback()}")
+    while not robot_manager.is_reconstruction_ready():
+        robot_manager.get_logger().info(f"Waiting for map to be ready...")
         time.sleep(1)
-        continue
+
+    # Example position
+    robot_manager.startup()
+
+    positions = [[0.0, 3.0, 0.0], [0.0, -3.0, 0.0]]
+
+    for position in positions:
+        robot_manager.start_navigation(position)
+
+        while not robot_manager.is_navigation_finished():
+            # To give feedback
+            robot_manager.get_logger().info(f"Feedback: {robot_manager.get_feedback()}")
+            time.sleep(1)
     
     robot_manager.publish_reconstruction_switch(False)
-    robot_manager.get_logger().info(f"Finished navigation to {position}")
+    robot_manager.get_logger().info(f"Finished navigation to {positions}")
 
 def test_cancel_job(robot_manager: RobotManager):
     executor = MultiThreadedExecutor()

@@ -38,12 +38,13 @@ class ObjectDetection(Node):
         self.robot_position_publisher = self.create_publisher(Odometry, 'object_detection/publishers/odom_real', qos_profile=qos)
 
         self.detection_model = YOLO(self.model_file.get_parameter_value().string_value)
-        
+
 
     def write_costmap(self, msg):
         image = np.array(msg.data)
         image = image.reshape((int(np.sqrt(image.shape[0])), int(np.sqrt(image.shape[0]))))
         cv2.imwrite('/home/adriangt2001/Pictures/costmap.jpg', image)
+
 
     def model_callback(self, msg):
         header = msg.header
@@ -54,17 +55,17 @@ class ObjectDetection(Node):
         # Publish robot position
         if not np.all(robot_mask == 0):
             self.get_logger().info('Robot Detected')
-            real_position, meters_per_pixel = self.estimate_scale_and_transform(robot_mask)
+            real_position = self.estimate_scale_and_transform(robot_mask)
             self.publish_robot_position(real_position, header)
 
         # Publish map
         # Need to do some transformation to really adjust map size based on the meter_per_pixel calculated earlier
         if not np.all(obstacle_mask == 0):
             self.get_logger().info('Map detected')
-            self.publish_occupancy_grid(obstacle_mask, header, meters_per_pixel)
+            self.publish_occupancy_grid(obstacle_mask, header)
 
 
-    def publish_occupancy_grid(self, binary_image, header, resolution):
+    def publish_occupancy_grid(self, binary_image, header):
         occupancy_grid = OccupancyGrid()
         
         occupancy_grid.header.stamp = header.stamp
@@ -105,13 +106,14 @@ class ObjectDetection(Node):
 
 
     def estimate_scale_and_transform(self, robot_mask):
-        real_radius = 1
+        # real_radius = 1
         contours, _ = cv2.findContours(robot_mask.transpose(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         largest_contour = max(contours, key=cv2.contourArea)
         (x, y), radius = cv2.minEnclosingCircle(largest_contour)
-        meters_per_pixel = real_radius / radius
-        real_world_coords = ((int(x) - robot_mask.shape[0] / 2) * 0.05, (int(y) - robot_mask.shape[1] / 2) * 0.05)
-        return real_world_coords, meters_per_pixel
+        # meters_per_pixel = real_radius / radius
+        real_world_coords = ((x - robot_mask.shape[0] / 2.0) * 0.05, (y - robot_mask.shape[1] / 2.0) * 0.05)
+        return real_world_coords
+
 
     def compute_covariance_matrix(self, std_dev_position=0.1, std_dev_orientation=2*np.pi):
         covariance_matrix = np.zeros((6,6))

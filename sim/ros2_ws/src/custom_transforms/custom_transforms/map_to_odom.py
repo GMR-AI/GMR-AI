@@ -4,10 +4,10 @@ from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 
-from custom_interfaces.msg import StringStamped
 from tf2_ros import TransformBroadcaster
 from tf2_msgs.msg import TFMessage
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Empty
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import TransformStamped
 from rosgraph_msgs.msg import Clock
@@ -37,7 +37,7 @@ class Map2OdomNode(Node):
 
 
         self.check_odometry = False
-        self.robot_odometry_pose = PoseStamped()
+        self.robot_odometry_pose = []
 
         # Initialize the time
 
@@ -61,6 +61,7 @@ class Map2OdomNode(Node):
         self.map2odom_transform.transform.rotation.w = 1.0
         
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        qos_volatile = QoSProfile(depth=1, durability=QoSDurabilityPolicy.VOLATILE)
 
         # Callback Groups
         group1 = ReentrantCallbackGroup()
@@ -68,9 +69,9 @@ class Map2OdomNode(Node):
 
         # Subscribers
         self.clock_subscriber = self.create_subscription(Clock, '/clock', self.clock_callback, qos_profile=10, callback_group=group1)
-        self.reconstruction_start_subscriber = self.create_subscription(StringStamped, "reconstruction/publishers/start", self.reconstruction_callback, qos_profile=qos, callback_group=group1)
-        self.robot_odom_subscriber = self.create_subscription(Odometry, "gmr/odom", self.robot_odom_callback, qos_profile=10, callback_group=group2)
-        self.robot_map_subscriber = self.create_subscription(Odometry, "object_detection/publishers/odom_real", self.robot_map_callback, qos_profile=qos, callback_group=group2)
+        self.reconstruction_start_subscriber = self.create_subscription(Empty, "reconstruction/publishers/start", self.reconstruction_callback, qos_profile=qos_volatile, callback_group=group1)
+        self.robot_odom_subscriber = self.create_subscription(Odometry, "gmr/odom", self.robot_odom_callback, qos_profile=qos_volatile, callback_group=group2)
+        self.robot_map_subscriber = self.create_subscription(Odometry, 'object_detection/publishers/odom_real', self.robot_map_callback, qos_profile=qos, callback_group=group2)
 
         # Broadcasters
         self.map2odom_broadcaster = TransformBroadcaster(self, qos=qos)
@@ -78,21 +79,27 @@ class Map2OdomNode(Node):
         # Veremos...
         self.timer = self.create_timer(0.05, self.timer_callback, callback_group=group2)
 
-    def clock_callback(self, msg):
+    def clock_callback(self, msg: Clock):
         self.stamp = msg.clock
     
     def reconstruction_callback(self, _):
         self.check_odometry = True
 
-    def robot_odom_callback(self, msg):
+    def robot_odom_callback(self, msg: Odometry):
         if self.check_odometry:
-            self.robot_odometry_pose.header = msg.header
-            self.robot_odometry_pose.pose = msg.pose.pose
+            pose = PoseStamped()
+            pose.header = msg.header
+            pose.pose = msg.pose.pose
+            self.robot_odometry_pose.append(pose)
             self.check_odometry = False
+            self.get_logger().info(f"Robot odom position: {self.robot_odometry_pose[-1].pose.position}")
 
     def robot_map_callback(self, msg: Odometry):
-        self.map2odom_transform.transform.translation.x = msg.pose.pose.position.x - self.robot_odometry_pose.pose.position.x
-        self.map2odom_transform.transform.translation.y = msg.pose.pose.position.y - self.robot_odometry_pose.pose.position.y
+        robot_pose_odom = self.robot_odometry_pose.pop(0)
+        self.get_logger().info(f"Robot odom position: {robot_pose_odom.pose.position}")
+        self.map2odom_transform.transform.translation.x = msg.pose.pose.position.x - robot_pose_odom.pose.position.x
+        self.map2odom_transform.transform.translation.y = msg.pose.pose.position.y - robot_pose_odom.pose.position.y
+        self.get_logger().info(f"Odom position: {self.map2odom_transform.transform.translation}")
         # self.map2odom_transform.transform.rotation = msg.pose.pose.orientation
 
     def transform_callback(self, msg):
