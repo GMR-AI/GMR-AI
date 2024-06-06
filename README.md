@@ -164,20 +164,20 @@ In this section, we will delve into each aspect of the project. This includes de
 ### Hardware
 
 The hardware used in this project are the following:
-| Component                                          | Unitats | Preu   |
-|----------------------------------------------------|---------|--------|
-| Motor N20 6V                                       | 4       | 4,5 €  |
-| Mini servo FEETECH 3.5kg                           | 1       | 7,95 € |
-| POWERBANK 10000 MAh, Negro                         | 1       | 14 €   |
-| Virtavo Camara HD 1080p Inalambrica                | 32      | 30,99 €|
-| NVIDIA Jetson Nano                                 | 1       | 259 €  |
-| Módulo sensor de humedad y temperatura DHT11       | 1       | 2,80 € |
-| PORTAPILAS 6 PILAS AA CON CONECTOR                 | 1       | 3,85 € |
-| Controlador de motores doble puente H - L298N      | 3       | 15,00 €|
-| Interruptor ON/OFF cuadrado                        | 1       | 1,25 € |
-| Pack 6 pilas AA recargables 1.2V                   | 1       | 11,43 €|
-|                                                    |         |        |
-| **Preu Total:**                                    |         | 1354,96 €|
+| Component                                          | Units | Price   |
+|----------------------------------------------------|-------|---------|
+| N20 6V Motor                                       | 4     | 4.5 €   |
+| Mini servo FEETECH 3.5kg                           | 1     | 7.95 €  |
+| POWERBANK 10000 MAh, Black                         | 1     | 14 €    |
+| Virtavo Wireless HD 1080p Camera                   | 32    | 30.99 € |
+| NVIDIA Jetson Nano                                 | 1     | 259 €   |
+| DHT11 Humidity and Temperature Sensor Module       | 1     | 2.80 €  |
+| 6 AA BATTERY HOLDER WITH CONNECTOR                 | 1     | 3.85 €  |
+| L298N Dual H-Bridge Motor Controller               | 3     | 15.00 € |
+| Square ON/OFF Switch                               | 1     | 1.25 €  |
+| Pack of 6 AA Rechargeable Batteries 1.2V           | 1     | 11.43 € |
+|                                                    |       |         |
+| **Total Price:**                                   |       | 1354.96 €|
 
 #### Fritzing
 Using the hardware and the connections between each component from the table above, we’ve created the following circuitry through the Fritzing platform:
@@ -193,7 +193,7 @@ We decided that the best form of controlling your GMR devices is by creating a f
 
 ### Communication via ROS2 and Google Server 
 
-Explicas un poco como va la comunicación y foto del esquema de comunicacion como hiciste en el excalidraw. Proque el profe nos dijo que hablaramos de esto que nos ponia mas nota.
+EXPLICAR HERE!!!!
 
 ### YOLO V8 - Obstacle Detection
 For obstacle detection, we created our own dataset with a training set, a validation set, and a test set. We started with a dataset of 63 images taken from a bird's-eye view of the entire simulation terrain. We then performed data augmentation, applying horizontal and vertical flips, 90-degree rotations clockwise and counter-clockwise, upside-down rotations, blurring up to 1.1 px, and adding noise to up to 0.3% of pixels. 
