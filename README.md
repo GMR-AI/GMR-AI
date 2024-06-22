@@ -45,9 +45,9 @@
 
 This project involves the design of an automated robot capable of mowing the lawn on large-scale fields such as an aircraft carrier. The robot can be adjusted to cut the grass at various levels and is programmed to follow the most efficient mowing pattern possible.
 
-In addition, it incorporates computer vision technology, which enables the robot to avoid obstacles and determine whether it is cutting grass or not. The robot is accompanied by multiple cameras that cover all the terrain from different types of views. These cameras survey the terrain and send all the information to the lawn-mowing robot for processing. This allows the robot to adjust its preplanned path as necessary.
+In addition, it incorporates computer vision technology, which enables the robot to avoid obstacles. The robot is accompanied by multiple cameras that cover all the terrain from different types of views. These cameras survey the terrain and send all the information to the lawn-mowing robot for processing. This allows the robot to adjust its preplanned path as necessary.
 
-The robot is also paired with a mobile application, which allows users to control the grass cutting level and turn the robot on and off. Furthermore, the application provides an accurate 3D representation of the entire terrain based on assets captured by these cameras. This comprehensive view gives users a clear understanding of the terrain and the ongoing mowing process.
+The robot is also paired with a mobile application, which allows users to control the grass cutting level and turn the robot on and off. Furthermore, the application provides an accurate 3D representation of the entire terrain based on the images captured by these cameras. This comprehensive view gives users a clear understanding of the terrain and the ongoing mowing process.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -152,7 +152,7 @@ To run your project, you will need to set up your phone device and install our A
 ```sh
 ros2 launch gmrai_description main.launch.py coppelia_root_dir:=</absolute/path/to/coppelia/root/folder> coppelia_scene_path:=</absolute/path/to/coppelia/scene> coppelia_headless:=<True|False>
 ```
-Now the server is active on the GMR. You can start a new job using your app, where it creates a 3D model of the terrain. You can then choose the height of the grass cut, and select the area that you want to cut. Start your job, where you will have a timer and a 3D model of the terrain you are cutting.
+Now the GMR is connected. You can start a new job using your app, where it creates a 3D model of the terrain. You can then choose the height of the grass cut, and select the area that you want to cut. Start your job, where you will have a timer and a 3D model of the terrain you are cutting.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -229,21 +229,21 @@ Below is an image of the final reconstruction, which can be viewed through the M
 <!-- CONTRIBUTING -->
 ## Project Task List
 
-The task list for our project is divided into three distinct blocks, which are worked on in parallel. However, in some cases, collaboration between blocks will be necessary. The tasks for each block are as follows:
+The task list for our project is divided into three distinct blocks, which are worked on in parallel. However, in some cases, collaboration between blocks is necessary. The tasks for each block are as follows:
 
 ### CoppeliaSim Simulation
 
-1. **Designing the GMR Device:** The first step involves creating the design of the Ground Monitoring Robot (GMR) device. Once the design is finalized, it is exported to CoppeliaSim, a robot simulator software.
+1. **Designing the GMR Device:** Design the Grass Management Robot (GMR) and export it to CoppeliaSim, a robot simulation software.
 
-2. **Applying Joints and Wheels:** After importing the design into CoppeliaSim, joints and wheels are applied to the robot. This allows the robot to move around in the simulated environment.
+2. **Applying Joints and Wheels:** Add joints and links to the model and generate an URDF for future use.
 
-3. **Creating a Personalized World:** A custom world is created within CoppeliaSim. This world includes a large terrain with various obstacles, such as trees placed at different locations. The aim is to mimic real-world conditions that the GMR device might encounter.
+3. **Creating a Personalized World:** Create the world with some obstacles in which the robot operates and maneuver.
 
-4. **Placing Cameras:** A total of 32 cameras are strategically placed within the world to cover every part of the terrain. These cameras capture images from different angles, providing a comprehensive view of the terrain.
+4. **Placing Cameras:** Place some cameras all over the area to ensure a good quality 3D reconstruction. (In the end, 32 cameras were needed to achieve that).
 
-5. **Programming Robot Movements and ROS2 Integration:** The movements of the robot are programmed using a scripting language provided by CoppeliaSim. Additionally, the robot is linked with ROS2 (Robot Operating System 2), a flexible framework for writing robot software. This allows for better control and coordination of the robot's movements.
+5. **Programming Robot Movements and ROS2 Integration:** Build all the robot logic and connect all its differents component together. To do this, use ROS2 (Robot Operating System 2) as it allows easy partitions between all the different functionalities and the required multitasking.
 
-6. **Setting Up Server Communication:** A server is set up to facilitate communication between the GMR device and Google Cloud. This allows for real-time data transfer and remote monitoring of the robot's activities.
+6. **Setting Up Server Communication:** Create a client in the robot that connects with the Google Cloud server to communicate with the MyGMR App.
 
 ### MyGMR - App 
 
@@ -266,24 +266,26 @@ The task list for our project is divided into three distinct blocks, which are w
 9. **Google Cloud Connection:** Connect the app to Google Cloud to facilitate communication between the app and the robot in the CoppeliaSim simulation. This ensures real-time data transfer and remote control of the robot.
 
 
-### Vision Computing - YoloV8 & Instant-NGP
+### Computer Vision - YoloV8 & Instant-NGP
 
-1. **Create Custom Dataset:** Generate a custom dataset using assets captured in Coppelia. This includes creating ground truth labels for both training and testing datasets. The quality of the dataset is crucial for the performance of the object detection model.
+1. **3D Reconstruction Using Instant-NGP:** Use the 32 images captured by the cameras to perform a 3D reconstruction of the terrain using Instant-NGP, which generates a mesh (obj) and a pointcloud (ply).
 
-2. **Train Object Detection Model:** Train a specific model using YoloV8 for object detection. The model is trained using the custom dataset we created. After training, test the performance of the model to ensure it meets the required standards.
+2. **Pointcloud To Top-Down 2D Image:** Use the pointcloud to generate a 2D Top-Down image.
 
-3. **Apply Object Detection Model to Coppelia:** Implement the trained object detection model in Coppelia. Use RViz, a 3D visualization tool for ROS, to verify if the model is working perfectly. This step is crucial to ensure the model can accurately detect objects in the simulated environment.
+3. **Create Custom Dataset:** Generate a custom dataset using a set of previously generated images with the aforementioned method to detect obstacles and the robot on the field. This includes creating ground truth labels for both training and testing datasets using [RoboFlow](https://roboflow.com/).
 
-4. **3D Reconstruction Using Instant-NGP:** Utilize the 32 images captured by the cameras to perform a 3D reconstruction of the terrain using Instant-NGP. This step transforms the 2D images into a 3D model, providing a more comprehensive view of the terrain.
+4. **Train Object Detection Model:** Train a Yolov8 model for object segmentation using the previous dataset. After training, test the performance of the model to ensure it meets the required standards.
 
-5. **Send 3D Reconstruction to Google Cloud and MyGMR App:** Implement a feature to send the 3D reconstruction to Google Cloud. From Google Cloud, the 3D model is then sent to the MyGMR app. This allows users to view the 3D model on their mobile devices, providing them with a detailed view of the terrain.
+5. **Apply Object Detection:** Use the trained model for inference in each 2D generated image for slam. Use RViz, a 3D visualization tool for ROS and ROS2, to check that the robot's comprehension of its surroundings is as it should. This step is crucial to ensure the model can accurately detect objects in the simulated environment.
+
+6. **Send 3D Reconstruction and 2D Image to Google Cloud and MyGMR App:** Send a 3D model and a 2D image to Google Cloud when asked from the MyGMR App.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## References
 
 - [ROS2](https://docs.ros.org/en/humble/index.html): Documentation for the Robot Operating System 2 (ROS2).
-- [Roboflow Model](https://app.roboflow.com/gmr/gmr-detection/2): The specific model used for object detection in our project.
+- [Roboflow Dataset](https://app.roboflow.com/gmr/gmr-detection/2): The specific dataset used for training the object detection model in our project.
 - [Instant-NGP](https://github.com/NVlabs/instant-ngp): The GitHub repository for NVLabs' Instant-NGP technology used for 3D reconstruction.
 - [Flutter Libraries](https://pub.dev/): A collection of libraries for Flutter, the UI toolkit used for frontend development in our app.
 - [YoloV8](https://github.com/ultralytics/ultralytics): The GitHub repository for the YoloV8 model used for object detection.
