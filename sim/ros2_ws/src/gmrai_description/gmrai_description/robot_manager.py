@@ -85,12 +85,10 @@ class RobotManager(Node):
         self.get_logger().info("Got reconstruction path!")
         return future.result().path
 
-
     def publish_reconstruction_switch(self, switch):
         msg = Bool()
         msg.data = switch
         self.reconstruction_switch_publisher.publish(msg)
-
 
     def is_reconstruction_ready(self):
         self.executor.spin_once(timeout_sec=0.100)
@@ -104,7 +102,6 @@ class RobotManager(Node):
 
         self.reconstruction_active = True
         self.model_path = msg.data
-
 
     # Home position
     def send_home_pose_request(self):
@@ -137,18 +134,6 @@ class RobotManager(Node):
         goal_msg.pose.pose.orientation.y = 0.0
         goal_msg.pose.pose.orientation.z = 0.0
         goal_msg.pose.pose.orientation.w = 1.0
-        # for position in positions:
-        #     p = PoseStamped()
-        #     p.header.stamp
-        #     p.header.frame_id = 'map'
-        #     p.pose.position.x = position[0]
-        #     p.pose.position.y = position[1]
-        #     p.pose.position.z = position[2]
-        #     p.pose.orientation.x = 0.0
-        #     p.pose.orientation.y = 0.0
-        #     p.pose.orientation.z = 0.0
-        #     p.pose.orientation.w = 1.0
-        #     goal_msg.poses.append(p)
 
         self.get_logger().info(f"Prepared goal to {position}!")
 
@@ -161,7 +146,7 @@ class RobotManager(Node):
         if not self.goal_handle.accepted:
             self.get_logger().info(f"Action rejected :<")
             return False
-        
+
         self.get_logger().info(f"Sent goal to navigation server!")
         self.result_future = self.goal_handle.get_result_async()
         return True
@@ -169,20 +154,16 @@ class RobotManager(Node):
     def start_navigation(self, positions):
         accepted = self.send_navigation_goal(positions)
         return accepted
-    
+
     def is_navigation_finished(self):
         if not self.result_future:
+            self.get_logger().info(f"No task assigned?")
             return True
         
         self.executor.spin_until_future_complete(self.result_future, timeout_sec=0.100)
         if self.result_future.result():
-            status = self.result_future.result().result
-            if status != 0:
-                self.get_logger().info(f'Task failed with status code: {status}')
-                return True
-            else:
-                self.get_logger().info(f"Task finished succesfully! {status}")
-                return True
+            self.get_logger().info(f"Task finished!")
+            return True
         else:
             return False
 
@@ -192,7 +173,9 @@ class RobotManager(Node):
         self.go_home()
 
     def go_home(self):
-        self.send_navigation_goal()
+        pose = self.send_home_pose_request()
+        position = [pose.position.x, pose.position.y, 0.0]
+        self.send_navigation_goal(position)
 
     def startup(self, node_name = 'bt_navigator'):
         # Waits for the node within the tester namespace to become active
@@ -201,7 +184,7 @@ class RobotManager(Node):
         state_client = self.create_client(GetState, node_service)
         while not state_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info(f'{node_service} service not available, waiting...')
-        
+
         req = GetState.Request()
         state = 'unknown'
         while state != 'active':
@@ -250,9 +233,10 @@ def test_start_job(robot_manager: RobotManager):
             # To give feedback
             robot_manager.get_logger().info(f"Feedback: {robot_manager.get_feedback()}")
             time.sleep(1)
-    
+
     robot_manager.publish_reconstruction_switch(False)
     robot_manager.get_logger().info(f"Finished navigation to {positions}")
+
 
 def test_cancel_job(robot_manager: RobotManager):
     executor = MultiThreadedExecutor()
@@ -272,11 +256,12 @@ def test_cancel_job(robot_manager: RobotManager):
         time.sleep(1)
         continue
 
+
 def main():
     rclpy.init()
 
     manager = RobotManager()
-    
+
     # test_new_job(manager)
     test_start_job(manager)
     # test_cancel_job(manager)
