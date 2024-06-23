@@ -11,65 +11,10 @@ from grid_map_lib import GridMap, FloatGrid
 import numpy as np
 
 import numpy as np
-from shapely.geometry import Polygon, LineString, MultiLineString
 
-def generate_zigzag_points(vertices, radius):
-    def interpolate(p1, p2, t):
-        return (p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t)
+from zig_zag import planning
 
-    # Create the polygon from vertices
-    poly = Polygon(vertices)
-    
-    # Determine the bounding box
-    minx, miny, maxx, maxy = poly.bounds
-    
-    # Generate lines
-    lines = []
-    y = miny
-    while y <= maxy:
-        lines.append(LineString([(minx, y), (maxx, y)]))
-        y += radius
-    
-    # Clip lines to the polygon and extract points
-    points = []
-    for line in lines:
-        clipped_line = poly.intersection(line)
-        if isinstance(clipped_line, LineString):
-            coords = list(clipped_line.coords)
-            points.extend(coords)
-        elif isinstance(clipped_line, MultiLineString):
-            for subline in clipped_line:
-                points.extend(list(subline.coords))
-    
-    # Arrange points in zigzag order
-    ordered_points = []
-    toggle = False
-    for i in range(0, len(points), 2):
-        if i + 1 < len(points):
-            if toggle:
-                ordered_points.append(points[i + 1])
-                ordered_points.append(points[i])
-            else:
-                ordered_points.append(points[i])
-                ordered_points.append(points[i + 1])
-            toggle = not toggle
-    
-    return ordered_points
-
-
-def planning(ax, ay, res):
-    # Example usage
-    vertices = [(x, y) for x, y in zip(ax, ay)]
-    radius = res
-
-    points = generate_zigzag_points(vertices, radius)
-    print(points)
-    return [p[0] for p in points], [p[1] for p in points]
-
-
-
-
-def plot_path_on_image(area_coords, path_coords, background_image_path):
+def plot_path_on_image(area_coords, path_coords, background_image_path, save_name):
     img = Image.open(background_image_path)
     draw = ImageDraw.Draw(img)
 
@@ -79,7 +24,7 @@ def plot_path_on_image(area_coords, path_coords, background_image_path):
     # Draw the sweep path
     draw.line(list(zip(*path_coords)), fill="red", width=2)
 
-    img.save("output_image.png")
+    img.save(save_name)
 
 def check_within_bounds(coords, img_width, img_height):
     for x, y in zip(*coords):
@@ -112,18 +57,20 @@ def post_process_path(path_x, path_y, free_space):
     return adjusted_x, adjusted_y
 
 
-def coverage_planning(area_x, area_y, background_image_path, res):
+def coverage_planning(area_x, area_y, diameter, background_image_path, save_name="output.png"):
     img = Image.open(background_image_path)
     img_width, img_height = img.size
     img_width, img_height = img.size
     img_array, free_space, _ = load_image_mask(background_image_path)
 
     if check_within_bounds((area_x, area_y), img_width, img_height):
-        rx, ry = planning(area_x, area_y, res)
+        rx, ry = planning(area_x, area_y, diameter)
+        if not rx:
+            return
         rx = [int(x) for x in rx]
         ry = [int(y) for y in ry]
-        #rx, ry = post_process_path(rx, ry, free_space)
-        plot_path_on_image((area_x, area_y), (rx, ry), background_image_path)
+        rx, ry = post_process_path(rx, ry, free_space)
+        plot_path_on_image((area_x, area_y), (rx, ry), background_image_path, save_name)
         print("Points are:")
         print("x: ", rx[:5])
         print("y: ", ry[:5])
@@ -132,26 +79,32 @@ def coverage_planning(area_x, area_y, background_image_path, res):
 
 def main():
     print("start!!")
-    background_image_path = "image.png"
-
+    background_image_path = "src/coverage_planning/image.png"
+    diameter=10
 
     # Test 1: Coordinates that may be out of image bounds
     ox1 = [0, 200, 500, 1000, 1300, 400, 0]
     oy1 = [0, 200, 0, 300, 600, 800, 0]
 
-    coverage_planning(ox1, oy1, background_image_path, 5.0)
+    coverage_planning(ox1, oy1, diameter, background_image_path)
 
-    # Test 2: Coordinates that fit within the 256x256 image bounds
+    # Test 2: Coordinates that fit within the 256x256 image bounds but has a vertical line
     ox2 = [44, 185, 178, 44]
     oy2 = [53, 57, 197, 196]
 
-    coverage_planning(ox2, oy2, background_image_path, 5.0)
+    coverage_planning(ox2, oy2, diameter, background_image_path, "test_square.png")
 
-    # Test 3: ROMBO
-    ox2 = [120, 180, 120, 125]
-    oy2 = [50, 125, 200, 45]
+    # Test 3: Test 2 without a vertical line
+    ox3 = [44, 185, 178, 43]
+    oy3 = [53, 57, 197, 196]
 
-    coverage_planning(ox2, oy2, background_image_path, 5.0)
+    coverage_planning(ox3, oy3, diameter, background_image_path, "test_square.png")
+
+    # Test 4: ROMBO
+    ox4 = [120, 180, 120, 125]
+    oy4 = [50, 125, 200, 45]
+
+    coverage_planning(ox4, oy4, diameter, background_image_path, "test_rombo.png")
 
     print("done!!")
 

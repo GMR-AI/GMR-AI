@@ -1,82 +1,72 @@
-class Line:
-    def __init__(self, m, n):
-        self.m = m
-        self.n = n
+from functions import *
+from PIL import Image, ImageDraw
+import IPython.display as display
 
-    def __call__(self, x):
-        return self.m * x + self.n
+def get_area_lines(ox, oy):
+    ## Obtener lineas de la area
+    Ltop = get_line_from_two_points([ox[0],oy[0]], [ox[1], oy[1]])
+    LRight = get_line_from_two_points([ox[1],oy[1]], [ox[2], oy[2]])
+    LBot = get_line_from_two_points([ox[2],oy[2]], [ox[3], oy[3]])
+    LLeft = get_line_from_two_points([ox[3],oy[3]], [ox[0], oy[0]])
+    return (Ltop, LRight, LBot, LLeft) if Ltop and LRight and LBot and LLeft else (None, None, None, None)
 
-def get_line_from_two_points(p1, p2):
-    if p1[0] == p2[0]:  # Vertical line
-        raise ValueError("Vertical line - slope is undefined.")
-    m = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    n = p1[1] - m * p1[0]
-    return Line(m, n)
+def get_points(ox, oy):
+    return [ox[0],oy[0]], [ox[1],oy[1]], [ox[2],oy[2]], [ox[3],oy[3]]
 
-def is_point_in_polygon(point, polygon):
-    x, y = point
-    n = len(polygon)
-    inside = False
+def gen_image(background_image_path, ox, oy):
+    area_coords= list(zip(ox, oy))
+    img = Image.open(background_image_path)
 
-    p1x, p1y = polygon[0]
-    for i in range(n + 1):
-        p2x, p2y = polygon[i % n]
-        if y > min(p1y, p2y):
-            if y <= max(p1y, p2y):
-                if x <= max(p1x, p2x):
-                    if p1y != p2y:
-                        xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1x == p2x or x <= xinters:
-                        inside = not inside
-        p1x, p1y = p2x, p2y
+    img = Image.open(background_image_path)
+    draw = ImageDraw.Draw(img)
 
-    return inside
+    # Draw the area boundary
+    draw.polygon(area_coords, outline="blue", fill=None, width=2)
 
-import math
+    display.display(img)
+    return draw, img
 
-def get_point_given_distance(distance, line, origin, area):
-    # Calculate the two possible points at the given distance
-    dx = distance / math.sqrt(1 + line.m ** 2)
-    dy = line.m * dx
+def planning(ox1, oy1, diameter):
 
-    point1 = (origin[0] + dx, origin[1] + dy)
-    point2 = (origin[0] - dx, origin[1] - dy)
+    solution=[]
+    (LTop, LRight, LBot, LLeft) = get_area_lines(ox1, oy1)
+    if not LTop:
+        return None, None
+    Po1, Po2, Po3, Po4 = get_points(ox1, oy1)
 
-    if is_point_in_polygon(point1, area):
-        return point1
-    if is_point_in_polygon(point2, area):
-        return point2
+    ## Obtener puntos dentro de las lineas para conseguir rectas generadoras
+    Pgen1=get_point_given_distance(diameter, LTop, Po1, Po4)
+    gen1=generate_parallel_line(LLeft, Pgen1)
 
-    return None  # This should not happen if distance is correct and within bounds
+    Pgen2=get_point_given_distance(diameter, LTop, Po2, Po3)
+    gen2=generate_parallel_line(LRight, Pgen2)
 
-import numpy as np
+    # Gen first two points (from top)
+    P1=intersection_point(gen1, LTop)
+    P2=intersection_point(gen2, LTop)
 
-def generate_zigzag_coverage(area, diameter):
-    p1, p2, p3, p4 = area
-    width = np.linalg.norm(np.array(p2) - np.array(p1))
-    height = np.linalg.norm(np.array(p4) - np.array(p1))
-    num_lines = int(height // diameter) + 1
+    # TODO: tratar edge case donde Ltop este muy cerca de LBot en algun lado (por parte de Pi1 o Pi2), mas cerca que el diametro
 
-    coverage_points = []
-    direction = 1  # 1 for right, -1 for left
+    EndGen=True # Este valor representa en que linea generadora nos hemos quedado al acabar la generacion quadrada True si esta en 1 i False si esta en 2
 
-    for i in range(num_lines):
-        y = p1[1] + i * diameter
-        if direction == 1:
-            start = (p1[0], y)
-            end = (p1[0] + width, y)
-        else:
-            start = (p1[0] + width, y)
-            end = (p1[0], y)
+    # Generacion quadrada
+    while True:
 
-        coverage_points.append(start)
-        coverage_points.append(end)
-        direction *= -1
+        # P3 a partir de la recta paralela a LLeft
+        P1=get_point_given_distance(diameter, gen1, P1, Po4)
+        solution.append(tuple(P1))
+        if distance_point_to_line(P1, LBot) < diameter:
+            break
 
-    return coverage_points
+        # Fem el mateix per a P4
+        P2=get_point_given_distance(diameter, gen2, P2, Po3)
+        solution.append(tuple(P2))
 
-# Example usage
-area = [(0, 0), (10, 0), (10, 5), (0, 5)]
-diameter = 1.0
-zigzag_points = generate_zigzag_coverage(area, diameter)
-print(zigzag_points)
+        if distance_point_to_line(P2, LBot) < diameter:
+            EndGen=False
+            break
+
+    rx = [s[0] for s in solution]
+    ry = [s[1] for s in solution]
+
+    return rx, ry
