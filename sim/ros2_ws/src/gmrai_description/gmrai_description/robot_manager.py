@@ -1,10 +1,14 @@
 from enum import Enum
 import time
+import numpy as np
 
-from nav2_msgs.action import NavigateToPose, NavigateThroughPoses
+from coverage_planning.zig_zag import planning
+from robot_client import RobotClient
+
+from nav2_msgs.action import NavigateToPose
 from lifecycle_msgs.srv import GetState
 from std_msgs.msg import Bool
-from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import OccupancyGrid
 from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskHomePose
 import rclpy
@@ -35,6 +39,7 @@ class RobotManager(Node):
         self.model_path = ''
         self.reconstruction_active = False
         self.home_position = [0.0, 0.0, 0.0]
+        self.area_image = None
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -56,6 +61,7 @@ class RobotManager(Node):
 
         # Subscribers
         self.reconstruction_path_subscriber = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.reconstruction_callback, qos_profile=qos, callback_group=group3)
+        self.area_image_subscriber = self.create_subscription(OccupancyGrid, 'map', self.area_image_callback, qos_profile=qos, callback_group=group3)
 
     # Getters
     def get_reconstruction(self):
@@ -102,6 +108,9 @@ class RobotManager(Node):
 
         self.reconstruction_active = True
         self.model_path = msg.data
+
+    def area_image_callback(self, msg:OccupancyGrid):
+        self.area_image = np.reshape(msg.data, (msg.info.height, msg.info.width))
 
     # Home position
     def send_home_pose_request(self):
@@ -151,8 +160,13 @@ class RobotManager(Node):
         self.result_future = self.goal_handle.get_result_async()
         return True
 
-    def start_navigation(self, positions):
-        accepted = self.send_navigation_goal(positions)
+    def start_navigation(self, area):
+        while (not self.area_image):
+            self.get_logger().info('Waiting for area image to be ready...')
+            self.executor.spin_once(timeout_sec=1)
+        
+        position_list = planning((area[0, :] / 0.05) + (self.area_image.shape[1]/2.0), (area[1, :] / 0.05) + (self.area_image.shape[0]/2.0), 0.5, self.area_image)
+        accepted = self.send_navigation_goal(position_list)
         return accepted
 
     def is_navigation_finished(self):
@@ -263,7 +277,20 @@ def main():
     manager = RobotManager()
 
     # test_new_job(manager)
-    test_start_job(manager)
+    # test_start_job(manager)
     # test_cancel_job(manager)
+
+    # Start Robot Client
+    load_dotenv()
+    with open("robot_data.json", 'r') as file:
+        data = json.load(file)
+    # gcloud test
+    server_url = os.environ.get("SERVER_URL")
+    robot_client = RobotClient(server_url, data, manager)
+
+    try:
+        robot_client.run()
+    except KeyboardInterrupt as e:
+        manager.get_logger().info(f'Shutting down robot')
 
     rclpy.shutdown()

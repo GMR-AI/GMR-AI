@@ -11,14 +11,17 @@ import os
 
 from ament_index_python import get_package_share_directory
 
-def convert_obj_to_glb(obj_path, glb_path):
+def convert_obj_to_glb(file_path):
     # Load the OBJ file
-    mesh = trimesh.load(obj_path)
+    mesh = trimesh.load(file_path)
+
+    # Change the file extension to .glb
+    glb_file_path = os.path.splitext(file_path)[0] + '.glb'
 
     # Export the mesh to GLB format
-    mesh.export(glb_path, file_type='glb')
+    mesh.export(glb_file_path, file_type='glb')
 
-    print(f"Converted {obj_path} to {glb_path}")
+    print(f"Converted {file_path} to {glb_file_path}")
 
 
 def upload_to_gcs(file_path, destination_blob_name):
@@ -99,6 +102,8 @@ class RobotClient:
                 if self.connection == CON_STATUS.OFFLINE:
                     self.robot_manager.get_logger().info(f"Robot is online.")
                     self.connection = CON_STATUS.ONLINE
+                    # Reanudate status
+                    self.reanudate_status()
                                 
             elif response.status_code == 201:
                 if self.robot_state != State.REQUESTING:
@@ -123,6 +128,7 @@ class RobotClient:
         except requests.RequestException as e:
             self.robot_manager.get_logger().info(f"Error: {e}")
         return None
+
 ################# REQUESTING #################
 
     def send_request(self):
@@ -187,13 +193,11 @@ class RobotClient:
             else:
                 job_status = State.WORKING
 
-            self.robot_manager.get_logger().info(f"Starting job...")
-            test_position = [3.0, 2.0, 0.0]
-            self.robot_manager.start_navigation(test_position)
+            self.do_task(job_data['area'].values())
             return
         elif job_status == j_status.CANCEL_JOB:
             self.robot_manager.get_logger().info(f"Cancelling...")
-            self.robot_manager.cancel_navigation()
+            self.cancel_task()
             self.robot_state = State.IDLE
             return
         elif job_status == j_status.UPDATE_JOB:
@@ -202,12 +206,17 @@ class RobotClient:
 
 ################# JOBS #################
 
-    def do_task(self):
+    def do_task(self, area):
+        self.robot_manager.get_logger().info(f"Planning the task...")
+        job_area = area
+        self.robot_manager.start_navigation(job_area)
+        self.robot_manager.get_logger().info(f"Plan was sent to ROS2")
         return
 
     def cancel_task(self):
         self.robot_manager.cancel_navigation()
         self.send_finished()
+        return
     
     def new_job(self):
         file_noext = self.robot_manager.get_reconstruction()
@@ -215,7 +224,6 @@ class RobotClient:
         glb_file = file_noext + ".glb"
         ply_file = file_noext + ".ply"
         jpg_file = file_noext + ".jpg"
-
 
         convert_obj_to_glb(obj_file)
 
