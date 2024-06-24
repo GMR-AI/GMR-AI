@@ -41,24 +41,6 @@ def load_image_mask(image_path):
     obstacles = np.where(img_array != 0)  # Non-black pixels (grey)
     return img_array, free_space, obstacles
 
-def find_nearest_free_space(point, free_space):
-    tree = KDTree(np.c_[free_space[0], free_space[1]])
-    _, idx = tree.query(point)
-    return free_space[0][idx], free_space[1][idx]
-
-def post_process_path(path_x, path_y, free_space):
-    adjusted_x, adjusted_y = [], []
-    for x, y in zip(path_x, path_y):
-        if (x, y) not in zip(free_space[0], free_space[1]):
-            nx, ny = find_nearest_free_space((x, y), free_space)
-            adjusted_x.append(nx)
-            adjusted_y.append(ny)
-        else:
-            adjusted_x.append(x)
-            adjusted_y.append(y)
-    return adjusted_x, adjusted_y
-
-
 def coverage_planning(area_x, area_y, diameter, background_image_path, save_name="output.png"):
     img = Image.open(background_image_path)
     img_width, img_height = img.size
@@ -66,12 +48,11 @@ def coverage_planning(area_x, area_y, diameter, background_image_path, save_name
     img_array, free_space, _ = load_image_mask(background_image_path)
 
     if check_within_bounds((area_x, area_y), img_width, img_height):
-        rx, ry = planning(area_x, area_y, diameter, background_image_path)
+        rx, ry, area_x, area_y = planning(area_x, area_y, diameter, background_image_path)
         if not rx:
             return
-        rx = [int(x) for x in rx]
-        ry = [int(y) for y in ry]
-        #rx, ry = post_process_path(rx, ry, free_space)
+        #rx = [int(x) for x in rx]
+        #ry = [int(y) for y in ry]
         plot_path_on_image((area_x, area_y), (rx, ry), background_image_path, save_name)
         print("Points are:")
         print("x: ", rx[:5])
@@ -94,7 +75,7 @@ def main():
     ox2 = [44, 185, 178, 44]
     oy2 = [53, 57, 197, 196]
 
-    coverage_planning(ox2, oy2, diameter, background_image_path, "test_square.png")
+    coverage_planning(ox2, oy2, diameter, background_image_path, "test_not_square.png")
 
     # Test 3: Test 2 without a vertical line
     ox3 = [44, 185, 178, 43]
@@ -102,7 +83,19 @@ def main():
 
     coverage_planning(ox3, oy3, diameter, background_image_path, "test_square.png")
 
-    # Test 4: ROMBO
+    # Test 4: Quadrado+Triangulo 1
+    ox4 = [72, 156, 165, 64]
+    oy4 = [52, 53, 136, 169]
+
+    coverage_planning(ox4, oy4, diameter, background_image_path, "test_QT1.png")
+
+    # Test 5: Quadrado+Triangulo 2
+    ox5 = [72, 156, 165, 64]
+    oy5 = [52, 53, 169, 136]
+
+    coverage_planning(ox5, oy5, diameter, background_image_path, "test_QT2.png")
+
+    # Test 6: ROMBO
     ox4 = [120, 180, 120, 125]
     oy4 = [50, 125, 200, 45]
 
@@ -112,5 +105,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #planning()
 

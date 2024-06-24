@@ -52,9 +52,8 @@ def get_point_given_distance(distance, line, origin, reference_point):
     
 
 def get_line_from_two_points(p1, p2):
-    if p1[0] == p2[0]:  # Vertical line
-        print("Vertical line - slope is undefined.")
-        return None
+    if p1[0] == p2[0]:  # Vertical line, move one line a little
+        p2[0]+=1
     m = (p2[1] - p1[1]) / (p2[0] - p1[0])
     n = p1[1] - m * p1[0]
     return Line(m, n)
@@ -91,3 +90,21 @@ def intersection_point(line1, line2):
     y = m1 * x + n1
     
     return [x, y]
+
+def angle_between_lines(line1, line2):
+    """
+    Calculate the angle between two lines.
+    
+    :param line1: First line (Line class instance).
+    :param line2: Second line (Line class instance).
+    :return: Angle in degrees between the two lines.
+    """
+    m1, m2 = line1.m, line2.m
+    
+    if (1 + m1 * m2) == 0:
+        return 90.0
+    
+    angle_rad = math.atan(abs((m1 - m2) / (1 + m1 * m2)))
+    angle_deg = math.degrees(angle_rad)
+    
+    return angle_deg

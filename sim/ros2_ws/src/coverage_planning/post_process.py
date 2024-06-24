@@ -1,47 +1,49 @@
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
-class mask:
+class Mask:
     def __init__(self, m, image_path):
         self.m = m
         img = Image.open(image_path).convert("L")  # Convert to grayscale
-        img.save("grayscale.png")
         self.mask = np.array(img)
     
     def __call__(self, x, y):
-        return self.mask[y, x]
+        if 0 <= x < self.mask.shape[1] and 0 <= y < self.mask.shape[0]:
+            return self.mask[y, x]
+        return 255  # Assume white (obstacle) for out-of-bounds
 
-    def process_points(self, P1,P2, padding):
+    def process_points(self, P1, P2, padding):
         Pi1 = [int(P1[0]), int(P1[1])]
         Pi2 = [int(P2[0]), int(P2[1])]
 
-        if self.mask[Pi1[0]][Pi1[1]] == 0 and self.mask[Pi2[0]][Pi2[1]] == 0:
+        if self.__call__(Pi1[0], Pi1[1]) == 0 and self.__call__(Pi2[0], Pi2[1]) == 0:
             return Pi1, Pi2
         
         line_points = bresenham_line(Pi1[0], Pi1[1], Pi2[0], Pi2[1])
+        
+        def is_free_with_padding(x, y, padding):
+            for dx in range(-padding, padding + 1):
+                for dy in range(-padding, padding + 1):
+                    if 0 <= x + dx < self.mask.shape[1] and 0 <= y + dy < self.mask.shape[0]:
+                        if self.__call__(x + dx, y + dy) != 0:
+                            return False
+            return True
+
         for x, y in line_points:
-            if Pi2[0] == x and Pi2[1] == y:
-                if self.mask[x, y] == 0: # Edge case donde P2 es el unico hueco libre
-                    return None, Pi2
-                else:
-                    return None, None
-            
-            if self.mask[y, x] == 0: # if Free is found then break
-                Pi1[0] = x
-                Pi1[1] = y
+            if self.__call__(x, y) == 0 and is_free_with_padding(x, y, padding):
+                Pi1[0], Pi1[1] = x, y
+                break
+
+        for x, y in reversed(line_points):
+            if self.__call__(x, y) == 0 and is_free_with_padding(x, y, padding):
+                Pi2[0], Pi2[1] = x, y
                 break
         
-        for x, y in line_points[::-1]:
-            if Pi1[0] == x and Pi1[1] == y:
-                return Pi1, None
-                         
-            if self.mask[y, x] == 0: # if Free is found then break
-                Pi2[0] = x
-                Pi2[1] = y
-                break
-
+        if self.__call__(Pi1[0], Pi1[1]) != 0 or self.__call__(Pi2[0], Pi2[1]) != 0:
+            return None, None
 
         return Pi1, Pi2
+
 
 
 def bresenham_line(x0, y0, x1, y1):
