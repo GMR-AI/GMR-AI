@@ -19,7 +19,9 @@ def plot_path_on_image(area_coords, path_coords, background_image_path, save_nam
     draw = ImageDraw.Draw(img)
 
     # Draw the area boundary
-    draw.line(list(zip(*area_coords)), fill="blue", width=2)
+    draw.polygon(list(zip(*area_coords)), outline="blue", fill=None, width=2)
+
+    #draw.line(list(zip(*area_coords)), fill="blue", width=2)
 
     # Draw the sweep path
     draw.line(list(zip(*path_coords)), fill="red", width=2)
@@ -64,12 +66,12 @@ def coverage_planning(area_x, area_y, diameter, background_image_path, save_name
     img_array, free_space, _ = load_image_mask(background_image_path)
 
     if check_within_bounds((area_x, area_y), img_width, img_height):
-        rx, ry = planning(area_x, area_y, diameter)
+        rx, ry = planning(area_x, area_y, diameter, background_image_path)
         if not rx:
             return
         rx = [int(x) for x in rx]
         ry = [int(y) for y in ry]
-        rx, ry = post_process_path(rx, ry, free_space)
+        #rx, ry = post_process_path(rx, ry, free_space)
         plot_path_on_image((area_x, area_y), (rx, ry), background_image_path, save_name)
         print("Points are:")
         print("x: ", rx[:5])

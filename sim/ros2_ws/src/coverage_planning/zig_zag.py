@@ -1,6 +1,7 @@
 from functions import *
 from PIL import Image, ImageDraw
 import IPython.display as display
+from post_process import mask
 
 def get_area_lines(ox, oy):
     ## Obtener lineas de la area
@@ -26,13 +27,14 @@ def gen_image(background_image_path, ox, oy):
     display.display(img)
     return draw, img
 
-def planning(ox1, oy1, diameter):
+def planning(ox1, oy1, diameter, image_path):
 
     solution=[]
     (LTop, LRight, LBot, LLeft) = get_area_lines(ox1, oy1)
     if not LTop:
         return None, None
     Po1, Po2, Po3, Po4 = get_points(ox1, oy1)
+    m = mask(LTop.m, image_path)
 
     ## Obtener puntos dentro de las lineas para conseguir rectas generadoras
     Pgen1=get_point_given_distance(diameter, LTop, Po1, Po4)
@@ -49,22 +51,36 @@ def planning(ox1, oy1, diameter):
 
     EndGen=True # Este valor representa en que linea generadora nos hemos quedado al acabar la generacion quadrada True si esta en 1 i False si esta en 2
 
+    switch=False
+
     # Generacion quadrada
     while True:
 
         # P3 a partir de la recta paralela a LLeft
         P1=get_point_given_distance(diameter, gen1, P1, Po4)
-        solution.append(tuple(P1))
         if distance_point_to_line(P1, LBot) < diameter:
+            Pi1 = [int(P1[0]), int(P1[1])]
+            if m(Pi1[0], Pi1[1]) == 0:
+                solution.append(tuple(Pi1)) # TODO: Tratar mejor esto cuando hagamos el procesado triangular
             break
 
         # Fem el mateix per a P4
         P2=get_point_given_distance(diameter, gen2, P2, Po3)
-        solution.append(tuple(P2))
+
+        P1_aux, P2_aux = m.process_points(P1.copy(), P2.copy())
+        if P1_aux:
+            solution.append(tuple(P1_aux))
+        if P2_aux:
+            solution.append(tuple(P2_aux))
+
+        if P1_aux and P2_aux and switch:
+            solution[-1], solution[-2] = solution[-2], solution[-1]
 
         if distance_point_to_line(P2, LBot) < diameter:
             EndGen=False
             break
+        
+        switch = not switch
 
     rx = [s[0] for s in solution]
     ry = [s[1] for s in solution]

@@ -38,8 +38,8 @@ def get_point_given_distance(distance, line, origin, reference_point):
     dx = distance / math.sqrt(1 + line.m ** 2)
     dy = line.m * dx
 
-    point1 = (origin[0] + dx, origin[1] + dy)
-    point2 = (origin[0] - dx, origin[1] - dy)
+    point1 = [origin[0] + dx, origin[1] + dy]
+    point2 = [origin[0] - dx, origin[1] - dy]
 
     dist1 = math.sqrt((point1[0] - reference_point[0]) ** 2 + (point1[1] - reference_point[1]) ** 2)
     dist2 = math.sqrt((point2[0] - reference_point[0]) ** 2 + (point2[1] - reference_point[1]) ** 2)
