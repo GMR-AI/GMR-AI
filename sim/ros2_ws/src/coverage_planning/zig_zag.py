@@ -76,10 +76,6 @@ def planning(ox1, oy1, diameter, image_path):
     P1=intersection_point(gen1, LTop)
     P2=intersection_point(gen2, LTop)
 
-    # TODO: tratar edge case donde Ltop este muy cerca de LBot en algun lado (por parte de Pi1 o Pi2), mas cerca que el diametro
-
-    EndGen=True # Este valor representa en que linea generadora nos hemos quedado al acabar la generacion quadrada True si esta en 1 i False si esta en 2
-
     switch=False
 
     # Generacion quadrada
@@ -90,7 +86,7 @@ def planning(ox1, oy1, diameter, image_path):
         if distance_point_to_line(P1, LBot) < diameter:
             Pi1 = [int(P1[0]), int(P1[1])]
             if m(Pi1[0], Pi1[1]) == 0:
-                solution.append(tuple(Pi1)) # TODO: Tratar mejor esto cuando hagamos el procesado triangular
+                solution.append(tuple(Pi1))
             break
 
         # Fem el mateix per a P4
@@ -106,7 +102,6 @@ def planning(ox1, oy1, diameter, image_path):
             solution[-1], solution[-2] = solution[-2], solution[-1]
 
         if distance_point_to_line(P2, LBot) < diameter:
-            EndGen=False
             break
         
         switch = not switch

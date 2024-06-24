@@ -1,12 +1,5 @@
-import math
-from enum import IntEnum
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as Rot
 from PIL import Image, ImageDraw
-from scipy.spatial import KDTree
-
-from grid_map_lib import GridMap, FloatGrid
 
 import numpy as np
 
