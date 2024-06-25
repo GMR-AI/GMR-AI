@@ -162,8 +162,8 @@ class RobotManager(Node):
         self.result_future = self.goal_handle.get_result_async()
         return True
 
-    def start_navigation(self, position=None, area=None):
-        if area:
+    def start_navigation(self, area=None):
+        if area is not None:
             while self.area_image is None:
                 self.get_logger().info('Waiting for area map to be ready...')
                 self.executor.spin_once(timeout_sec=1)
@@ -282,6 +282,7 @@ def main():
     executor = MultiThreadedExecutor()
     executor.add_node(manager)
 
+    manager.get_logger().info(f"Pwd: {os.getcwd()}")
     # test_new_job(manager)
     # test_start_job(manager)
     # test_cancel_job(manager)

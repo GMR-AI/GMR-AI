@@ -72,10 +72,10 @@ class ObjectDetection(Node):
         occupancy_grid.header.frame_id = 'map'
 
         occupancy_grid.info.resolution = 0.05
-        occupancy_grid.info.width = binary_image.shape[1]
-        occupancy_grid.info.height = binary_image.shape[0]
-        occupancy_grid.info.origin.position.x = - binary_image.shape[1] / 2 * 0.05
-        occupancy_grid.info.origin.position.y = - binary_image.shape[0] / 2 * 0.05
+        occupancy_grid.info.width = binary_image.shape[0]
+        occupancy_grid.info.height = binary_image.shape[1]
+        occupancy_grid.info.origin.position.x = - binary_image.shape[0] / 2 * 0.05
+        occupancy_grid.info.origin.position.y = - binary_image.shape[1] / 2 * 0.05
         occupancy_grid.info.origin.position.z = 0.0
         occupancy_grid.info.origin.orientation.w = 1.0
 

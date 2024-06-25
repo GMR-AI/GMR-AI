@@ -195,10 +195,13 @@ class RobotClient:
 ################# JOBS #################
 
     def do_task(self, area):
+        self.robot_manager.get_logger().info(f"Area: {area}")
+        self.robot_manager.get_logger().info(f"Area type: {type(area)}")
+        self.robot_manager.get_logger().info(f"Area inside type: {type(area[0])}")
         self.robot_manager.publish_reconstruction_switch(True)
         self.robot_manager.startup()
         self.robot_manager.get_logger().info(f"Planning the task...")
-        self.robot_manager.start_navigation(area)
+        self.robot_manager.start_navigation(area=area)
         self.robot_manager.get_logger().info(f"Plan was sent to ROS2")
         return
 
