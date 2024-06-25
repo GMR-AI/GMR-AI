@@ -2,9 +2,9 @@ import numpy as np
 from PIL import Image
 
 class Mask:
-    def __init__(self, m, image_path):
+    def __init__(self, m, image):
         self.m = m
-        img = Image.open(image_path).convert("L")  # Convert to grayscale
+        img = image # Convert to grayscale
         self.mask = np.array(img)
     
     def __call__(self, x, y):

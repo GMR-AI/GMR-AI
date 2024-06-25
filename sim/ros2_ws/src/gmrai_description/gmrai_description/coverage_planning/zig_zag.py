@@ -1,7 +1,8 @@
-from functions import *
+from gmrai_description.coverage_planning.functions import *
+from gmrai_description.coverage_planning.post_process import Mask
+
 from PIL import Image, ImageDraw
 import IPython.display as display
-from post_process import Mask
 
 def reorder_points(xs, ys):
     points = list(zip(xs, ys))
@@ -53,7 +54,7 @@ def gen_image(background_image_path, ox, oy):
     display.display(img)
     return draw, img
 
-def planning(ox1, oy1, diameter, image_path):
+def planning(ox1, oy1, diameter, image):
 
     # Pre-process
     ox1, oy1 = reorder_points(ox1, oy1)
@@ -63,7 +64,7 @@ def planning(ox1, oy1, diameter, image_path):
     if not LTop:
         return None, None
     Po1, Po2, Po3, Po4 = get_points(ox1, oy1)
-    m = Mask(LTop.m, image_path)
+    m = Mask(LTop.m, image)
 
     ## Obtener puntos dentro de las lineas para conseguir rectas generadoras
     Pgen1=get_point_given_distance(diameter, LTop, Po1, Po2)

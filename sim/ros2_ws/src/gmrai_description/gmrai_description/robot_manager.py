@@ -2,8 +2,8 @@ from enum import Enum
 import time
 import numpy as np
 
-from coverage_planning.zig_zag import planning
-from robot_client import RobotClient
+from gmrai_description.coverage_planning.zig_zag import planning
+from gmrai_description.robot_client import RobotClient
 
 from nav2_msgs.action import NavigateToPose
 from lifecycle_msgs.srv import GetState
@@ -38,8 +38,9 @@ class RobotManager(Node):
         self.behavior_tree = os.path.join(get_package_share_directory('gmrai_description'), 'behavior_trees', 'navigate_to_pose_w_replanning_and_recovery.xml')
         self.model_path = ''
         self.reconstruction_active = False
-        self.home_position = [0.0, 0.0, 0.0]
+        self.home_position = [-4.85, -0.85]
         self.area_image = None
+        self.position_list = []
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -138,7 +139,7 @@ class RobotManager(Node):
         goal_msg.pose.header.frame_id = 'map'
         goal_msg.pose.pose.position.x = position[0]
         goal_msg.pose.pose.position.y = position[1]
-        goal_msg.pose.pose.position.z = position[2]
+        goal_msg.pose.pose.position.z = 0.0
         goal_msg.pose.pose.orientation.x = 0.0
         goal_msg.pose.pose.orientation.y = 0.0
         goal_msg.pose.pose.orientation.z = 0.0
@@ -160,13 +161,26 @@ class RobotManager(Node):
         self.result_future = self.goal_handle.get_result_async()
         return True
 
-    def start_navigation(self, area):
-        while (not self.area_image):
-            self.get_logger().info('Waiting for area image to be ready...')
-            self.executor.spin_once(timeout_sec=1)
-        
-        position_list = planning((area[0, :] / 0.05) + (self.area_image.shape[1]/2.0), (area[1, :] / 0.05) + (self.area_image.shape[0]/2.0), 0.5, self.area_image)
-        accepted = self.send_navigation_goal(position_list)
+    def start_navigation(self, area=None):
+        if area:
+            while self.area_image is None:
+                self.get_logger().info('Waiting for area map to be ready...')
+                self.executor.spin_once(timeout_sec=1)
+            area = np.array(area)
+            image_positions_x, image_positions_y, _, _ = planning(area[:, 0], area[:, 1], 15, self.area_image)
+
+            positions_x = (np.array(image_positions_x) - self.area_image.shape[1] / 2.0) * 0.05
+            positions_y = (np.array(image_positions_y) - self.area_image.shape[0] / 2.0) * 0.05
+
+            self.position_list = np.vstack([positions_x, positions_y]).T.tolist()
+            self.get_logger().info(f"Positions shape: {(len(self.position_list), len(self.position_list[0]))}")
+        else:
+            if len(self.position_list) == 0:
+                self.get_logger().info(f"No more paths, returning to home position")
+                self.send_navigation_goal(self.home_position)
+                return False
+            
+        accepted = self.send_navigation_goal(self.position_list.pop(0))
         return accepted
 
     def is_navigation_finished(self):
@@ -271,6 +285,8 @@ def test_cancel_job(robot_manager: RobotManager):
         continue
 
 
+from gmrai_description.full_test import full_test
+
 def main():
     rclpy.init()
 
@@ -280,17 +296,21 @@ def main():
     # test_start_job(manager)
     # test_cancel_job(manager)
 
-    # Start Robot Client
-    load_dotenv()
-    with open("robot_data.json", 'r') as file:
-        data = json.load(file)
-    # gcloud test
-    server_url = os.environ.get("SERVER_URL")
-    robot_client = RobotClient(server_url, data, manager)
+    executor = MultiThreadedExecutor()
+    executor.add_node(manager)
+    full_test(manager)
 
-    try:
-        robot_client.run()
-    except KeyboardInterrupt as e:
-        manager.get_logger().info(f'Shutting down robot')
+    # Start Robot Client
+    # load_dotenv()
+    # with open("robot_data.json", 'r') as file:
+    #     data = json.load(file)
+    # # gcloud test
+    # server_url = os.environ.get("SERVER_URL")
+    # robot_client = RobotClient(server_url, data, manager)
+
+    # try:
+    #     robot_client.run()
+    # except KeyboardInterrupt as e:
+    #     manager.get_logger().info(f'Shutting down robot')
 
     rclpy.shutdown()

@@ -207,6 +207,8 @@ class RobotClient:
 ################# JOBS #################
 
     def do_task(self, area):
+        self.robot_manager.publish_reconstruction_switch(True)
+        self.robot_manager.startup()
         self.robot_manager.get_logger().info(f"Planning the task...")
         job_area = area
         self.robot_manager.start_navigation(job_area)
