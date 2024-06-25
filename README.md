@@ -193,20 +193,22 @@ We decided that the best form of controlling your GMR devices is by creating a f
 
 ### Communication via ROS2 and Google Server 
 
-EXPLICAR HERE!!!!
+To communicate both the robot and the MyGMR app via Google server, we created a client that acts as a bridge between the main robot manager and the remote server. There are different states defined depending on the robot status such as Requesting when the robot isn't assigned to any account or Working when it's currently doing some job.
+
+This client also sends the app all the information it needs, from the robot status to the 3D reconstruction of the terrain to show the user.
 
 ### YOLO V8 - Obstacle Detection
 For obstacle detection, we created our own dataset with a training set, a validation set, and a test set. We started with a dataset of 63 images taken from a bird's-eye view of the entire simulation terrain. We then performed data augmentation, applying horizontal and vertical flips, 90-degree rotations clockwise and counter-clockwise, upside-down rotations, blurring up to 1.1 px, and adding noise to up to 0.3% of pixels. 
 
 This process expanded our dataset to a total of 129 training images, 12 validation images, and 6 test images, for a grand total of 147 images. The objects in these images are relatively easy to identify due to their vibrant and striking colors, especially the trees.
 
-We used Roboflow for object identification. Roboflow is an end-to-end computer vision platform that simplifies the process of building computer vision models. It streamlines the process between labeling your data and training your model, making it an ideal tool for our project.
+We used Roboflow to create this dataset. Roboflow is an end-to-end computer vision platform that simplifies the process of building computer vision models. It streamlines the process between labeling your data and training your model, making it an ideal tool for our project.
 
-We also utilized YOLOv8, the latest version of the YOLO (You Only Look Once) series of models, known for their considerable accuracy while maintaining a small model size. YOLOv8 is a state-of-the-art model that can be used for object detection, image classification, and instance segmentation tasks.
+We also utilized YOLOv8, the one of the latest versions of the YOLO (You Only Look Once) series of models, known for their considerable accuracy while maintaining a small model size. YOLOv8 is a state-of-the-art model that can be used for object detection, image classification, and instance segmentation tasks.
 
-We decided to use 12 images for the validation set and 6 images for the test set. We chose to have more training images to increase our model's accuracy. We ran a test to determine the model's accuracy and found that it is 95.53%, meaning there is a 4.43% chance that the detection can fail.
+We decided to use 12 images for the validation set and 6 images for the test set. We chose to have more training images to increase our model's accuracy. We ran a test to determine the model's accuracy and found that it is 95.53%, meaning there is a 4.47% chance that the detection can fail.
 
-Roboflow provides us with a YOLOv8 model that is fully trained and capable of detecting obstacles on the map. You can check our model [here](https://universe.roboflow.com/gmr/gmr-detection/dataset/2).
+You can check our custom dataset [here](https://universe.roboflow.com/gmr/gmr-detection/dataset/2).
 
 <img src="assets/yolov8.png" alt="Logo" width="600" height="350" style="border-radius: 0%;">
 
@@ -217,7 +219,7 @@ This process of reconstruction from images is resource-intensive, so we carry ou
 
 The application of this technology is quite straightforward. As we mentioned in our installation segment, you simply need to clone their repository and then use our run.py program, replacing theirs.
 
-It’s important to note that there’s a small chance (7.3%) that the 3D reconstruction might fail and not produce a precise result. If this happens, the entire process needs to be repeated.
+It’s important to note that there’s a small chance (around 7.3%) that the 3D reconstruction might fail and not produce a precise result. However, the as we constantly do the reconstruction, the map will correct itself next time. The really important part is to make sure the initial reconstruction you receive is accurate, as it is the moment the coverage planning is processed.
 
 Below is an image of the final reconstruction, which can be viewed through the MyGMR app.
 
