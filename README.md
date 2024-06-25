@@ -166,18 +166,18 @@ In this section, we will delve into each aspect of the project. This includes de
 The hardware used in this project are the following:
 | Component                                          | Units | Price   |
 |----------------------------------------------------|-------|---------|
-| N20 6V Motor                                       | 4     | 4.5 €   |
+| N20 DC 6V                                          | 1     | 4.5 €   |
+| Metal DC Geared Motor w/Encoder - 6V               | 2     | 19.90 € |
 | Mini servo FEETECH 3.5kg                           | 1     | 7.95 €  |
-| POWERBANK 10000 MAh, Black                         | 1     | 14 €    |
+| POWERBANK 5V 10000 MAh, Black                      | 1     | 14 €    |
 | Virtavo Wireless HD 1080p Camera                   | 32    | 30.99 € |
 | NVIDIA Jetson Nano                                 | 1     | 259 €   |
-| DHT11 Humidity and Temperature Sensor Module       | 1     | 2.80 €  |
+| Adafruit Servo Driver                              | 1     | 14.95 € |
 | 6 AA BATTERY HOLDER WITH CONNECTOR                 | 1     | 3.85 €  |
-| L298N Dual H-Bridge Motor Controller               | 3     | 15.00 € |
-| Square ON/OFF Switch                               | 1     | 1.25 €  |
+| L298N Dual H-Bridge Motor Controller               | 2     | 15.00 € |
 | Pack of 6 AA Rechargeable Batteries 1.2V           | 1     | 11.43 € |
-|                                                    |       |         |
-| **Total Price:**                                   |       | 1354.96 €|
+| Adafruit IMU                                       | 1     | 34.95 € |
+| **Total Price:**                                   |       | 1412.11 €|
 
 #### Fritzing
 Using the hardware and the connections between each component from the table above, we’ve created the following circuitry through the Fritzing platform:
