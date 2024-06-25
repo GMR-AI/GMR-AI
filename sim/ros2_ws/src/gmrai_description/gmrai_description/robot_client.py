@@ -181,7 +181,7 @@ class RobotClient:
             else:
                 job_status = State.WORKING
 
-            self.do_task(job_data['area'].values())
+            self.do_task(list(job_data['area'].values()))
             self.active_job = job_data
             return
         elif job_status == j_status.CANCEL_JOB:

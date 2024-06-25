@@ -202,9 +202,9 @@ class RobotManager(Node):
         self.go_home()
 
     def go_home(self):
-        pose = self.send_home_pose_request()
-        position = [pose.position.x, pose.position.y]
-        self.send_navigation_goal(position)
+        # pose = self.send_home_pose_request()
+        # position = [pose.position.x, pose.position.y]
+        self.send_navigation_goal(self.home_position)
 
     def startup(self, node_name = 'bt_navigator'):
         # Waits for the node within the tester namespace to become active
