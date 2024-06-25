@@ -56,24 +56,12 @@ class CON_STATUS(Enum):
     OFFLINE = 0
     ONLINE = 1
 
-class Job:
-    def __init__(self, server_url, data, debug=False):
-        self.server_url = server_url
-        self.code = data['matricula']
-        self.model = data['model_id']
-        self.active_job = None
-        self.robot_state = State.IDLE
-        self.connection = CON_STATUS.OFFLINE
-        self.debug = debug
-
 import requests
 import time
 
 class RobotClient:
 
 ################# ATRIBUTES ######################
-
-
     def __init__(self, server_url, data, robot_manager, debug=False):
         self.server_url = server_url
         self.code = data['matricula']
@@ -184,7 +172,7 @@ class RobotClient:
             self.robot_state = State.WORKING
 
             if job_status == State.WORKING and self.active_job != None:
-                if self.active_job.id == job_data['id']:
+                if self.active_job['id'] == job_data['id']:
                     self.robot_manager.get_logger().info(f"Already doing the job")
                     return
 
@@ -194,11 +182,11 @@ class RobotClient:
                 job_status = State.WORKING
 
             self.do_task(job_data['area'].values())
+            self.active_job = job_data
             return
         elif job_status == j_status.CANCEL_JOB:
             self.robot_manager.get_logger().info(f"Cancelling...")
             self.cancel_task()
-            self.robot_state = State.IDLE
             return
         elif job_status == j_status.UPDATE_JOB:
             # Enviar datos del job ?????????
@@ -210,14 +198,14 @@ class RobotClient:
         self.robot_manager.publish_reconstruction_switch(True)
         self.robot_manager.startup()
         self.robot_manager.get_logger().info(f"Planning the task...")
-        job_area = area
-        self.robot_manager.start_navigation(job_area)
+        self.robot_manager.start_navigation(area)
         self.robot_manager.get_logger().info(f"Plan was sent to ROS2")
         return
 
     def cancel_task(self):
         self.robot_manager.cancel_navigation()
         self.send_finished()
+        self.robot_state = State.IDLE
         return
     
     def new_job(self):
@@ -236,8 +224,6 @@ class RobotClient:
         upload_to_gcs(glb_file, f"{self.code}_gmr.glb")
         upload_to_gcs(jpg_file, f"{self.code}_gmr.jpg")
         self.send_finished()
-
-
     
     def send_finished(self):
         try:
@@ -259,9 +245,22 @@ class RobotClient:
             self.ping()
             self.robot_manager.get_logger().info(f"State: {self.robot_state}")
             # No online, no new activities
+
             if self.connection == CON_STATUS.OFFLINE:
                 continue
+
             elif self.robot_state == State.REQUESTING: # Check for the request
                 self.check_request()
+
+            elif self.robot_state == State.WORKING:
+                if not self.robot_manager.is_navigation_finished():
+                    self.robot_manager.get_logger().info(f"Feedback: {self.robot_manager.get_feedback()}")
+                else:
+                    self.robot_manager.get_logger().info(f"Set next goal")
+                    is_still_working = self.robot_manager.start_navigation()
+                    if not is_still_working:
+                        self.robot_manager.get_logger().info(f"Finished job")
+                        self.cancel_task()
+                        
             else: # Unemployed, get a job
                 self.check_job_updates()

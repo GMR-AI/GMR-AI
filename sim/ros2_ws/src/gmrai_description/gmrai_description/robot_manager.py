@@ -22,6 +22,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from gmrai_description.robot_client import *
+from gmrai_description.full_test import full_test
 
 class TaskResult(Enum):
     UNKNOWN = 0
@@ -161,7 +162,7 @@ class RobotManager(Node):
         self.result_future = self.goal_handle.get_result_async()
         return True
 
-    def start_navigation(self, area=None):
+    def start_navigation(self, position=None, area=None):
         if area:
             while self.area_image is None:
                 self.get_logger().info('Waiting for area map to be ready...')
@@ -176,7 +177,7 @@ class RobotManager(Node):
             self.get_logger().info(f"Positions shape: {(len(self.position_list), len(self.position_list[0]))}")
         else:
             if len(self.position_list) == 0:
-                self.get_logger().info(f"No more paths, returning to home position")
+                self.get_logger().info(f"No more positions, job finished")
                 self.send_navigation_goal(self.home_position)
                 return False
             
@@ -202,7 +203,7 @@ class RobotManager(Node):
 
     def go_home(self):
         pose = self.send_home_pose_request()
-        position = [pose.position.x, pose.position.y, 0.0]
+        position = [pose.position.x, pose.position.y]
         self.send_navigation_goal(position)
 
     def startup(self, node_name = 'bt_navigator'):
@@ -227,9 +228,6 @@ class RobotManager(Node):
 
 
 def test_new_job(robot_manager: RobotManager):
-    executor = MultiThreadedExecutor()
-    executor.add_node(robot_manager)
-
     robot_manager.get_logger().info(f'Starting first reconstruction...')
     path = robot_manager.get_reconstruction()
     robot_manager.get_logger().info(f'Reconstruction path: {path}')
@@ -239,10 +237,6 @@ def test_new_job(robot_manager: RobotManager):
 
 
 def test_start_job(robot_manager: RobotManager):
-
-    executor = MultiThreadedExecutor()
-    executor.add_node(robot_manager)
-
     robot_manager.publish_reconstruction_switch(True)
 
     while not robot_manager.is_reconstruction_ready():
@@ -267,9 +261,6 @@ def test_start_job(robot_manager: RobotManager):
 
 
 def test_cancel_job(robot_manager: RobotManager):
-    executor = MultiThreadedExecutor()
-    executor.add_node(robot_manager)
-
     robot_manager.startup()
 
     # Example position
@@ -284,33 +275,29 @@ def test_cancel_job(robot_manager: RobotManager):
         time.sleep(1)
         continue
 
-
-from gmrai_description.full_test import full_test
-
 def main():
     rclpy.init()
 
     manager = RobotManager()
+    executor = MultiThreadedExecutor()
+    executor.add_node(manager)
 
     # test_new_job(manager)
     # test_start_job(manager)
     # test_cancel_job(manager)
-
-    executor = MultiThreadedExecutor()
-    executor.add_node(manager)
-    full_test(manager)
+    # full_test(manager)
 
     # Start Robot Client
-    # load_dotenv()
-    # with open("robot_data.json", 'r') as file:
-    #     data = json.load(file)
-    # # gcloud test
-    # server_url = os.environ.get("SERVER_URL")
-    # robot_client = RobotClient(server_url, data, manager)
+    load_dotenv(dotenv_path=os.path.join(get_package_share_directory('gmrai_description'), 'info', '.env'))
+    with open(os.path.join(get_package_share_directory('gmrai_description'), 'info', 'robot_data.json'), 'r') as file:
+        data = json.load(file)
+    # gcloud test
+    server_url = os.environ.get("SERVER_URL")
+    robot_client = RobotClient(server_url, data, manager)
 
-    # try:
-    #     robot_client.run()
-    # except KeyboardInterrupt as e:
-    #     manager.get_logger().info(f'Shutting down robot')
+    try:
+        robot_client.run()
+    except KeyboardInterrupt as e:
+        manager.get_logger().info(f"Shutting down robot")
 
     rclpy.shutdown()
