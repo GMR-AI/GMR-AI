@@ -168,8 +168,9 @@ profile_stats
 */ros2_ws/build/
 */ros2_ws/install/
 */ros2_ws/log/
-*/ros2_ws/model/
-*/ros2_ws/data/
+*/ros2_ws/model/*
+*/ros2_ws/data/images/*
+*/ros2_ws/data/*.json
 */ros2_ws*.pkl
 *.env
 *.json
