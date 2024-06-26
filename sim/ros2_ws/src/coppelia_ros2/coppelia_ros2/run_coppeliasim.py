@@ -9,10 +9,10 @@ class CoppeliaNode(Node):
     def __init__(self):
         super().__init__('coppelia_simulator')
 
-        self.default_coppelia_root_dir = '/home/adriangt2001/CoppeliaSim_Edu_V4_6_0_rev18_Ubuntu22_04'
-        self.default_coppelia_scene_path = '/home/adriangt2001/GMR-AI/sim/coppeliasim/GMR-Scene/Projecte.ttt'
+        self.default_coppelia_root_dir = os.path.join(os.path.expanduser('~'), 'CoppeliaSim_Edu_V4_6_0_rev18_Ubuntu22_04')
+        self.default_coppelia_scene_path = os.path.join(os.path.expanduser('~'), 'GMR-AI', 'sim', 'coppeliasim', 'GMR-Scene', 'GMR.ttt')
         self.default_coppelia_headless = False
-
+        
         self.declare_parameter('coppelia_root_dir', self.default_coppelia_root_dir)
         self.coppelia_root_dir = self.get_parameter('coppelia_root_dir')
         
@@ -21,6 +21,8 @@ class CoppeliaNode(Node):
 
         self.declare_parameter('coppelia_headless', self.default_coppelia_headless)
         self.coppelia_headless = self.get_parameter('coppelia_headless')
+
+        self.get_logger().warn(f"Coppelia scene path: {self.coppelia_scene_path.get_parameter_value().string_value}")
 
 
     def run(self):

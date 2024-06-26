@@ -13,6 +13,7 @@ from object_detection.instance_segmentation import segmentation
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import os
 
 class ObjectDetection(Node):
     def __init__(self):
@@ -43,7 +44,7 @@ class ObjectDetection(Node):
     def write_costmap(self, msg):
         image = np.array(msg.data)
         image = image.reshape((int(np.sqrt(image.shape[0])), int(np.sqrt(image.shape[0]))))
-        cv2.imwrite('/home/adriangt2001/Pictures/costmap.jpg', image)
+        cv2.imwrite(os.path.join(os.path.expanduser('~'), 'Pictures', 'costmap.jpg'), image)
 
 
     def model_callback(self, msg):
