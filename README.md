@@ -182,14 +182,13 @@ The hardware used in this project are the following:
 #### Fritzing
 Using the hardware and the connections between each component from the table above, we’ve created the following circuitry through the Fritzing platform:
 
-
+<img src="docs/GMR_AI.png" alt="Fritzing" style="border-radius: 0%;">
 
 ### MyGMR - Control your GMR device with our Android APP
 
 We decided that the best form of controlling your GMR devices is by creating a friendly app that gives you the opportunity to give full control of your GMR devices and also offering a ton of information to decied whether or not cutt the grass in certain times. You can know how the APP works the source code by going to the [MyGMR](https://github.com/GMR-AI/MyGMR) repository. 
 
-<img src="assets/app.png" alt="Logo" width="400" height="300" style="border-radius: 0%;">
-
+<img src="assets/app.png" alt="Logo" width="600" height="350" style="border-radius: 0%;">
 
 ### Communication via ROS2 and Google Server 
 
