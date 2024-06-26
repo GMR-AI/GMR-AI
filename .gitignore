@@ -172,3 +172,4 @@ profile_stats
 */ros2_ws/data/
 */ros2_ws*.pkl
 *.env
+*.json

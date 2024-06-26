@@ -1,7 +1,6 @@
 import numpy as np
 from plyfile import PlyData
 import cv2
-import os
 
 def read_ply(file_path):
     with open(file_path, 'rb') as f:

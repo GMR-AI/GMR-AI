@@ -21,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/StringStamped.msg"
   "srv/AskModelPath.srv"
   "srv/AskImageCamInfoGroup.srv"
+  "srv/AskHomePose.srv"
   DEPENDENCIES sensor_msgs std_msgs # Add packages that above messages depend on
 )
 

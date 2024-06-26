@@ -12,13 +12,11 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from rclpy.executors import MultiThreadedExecutor
 import subprocess
 
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Empty
 from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskImageCamInfoGroup
 from cv_bridge import CvBridge
 bridge = CvBridge()
-
-import threading
     
 
 class Reconstruction(Node):
@@ -29,7 +27,7 @@ class Reconstruction(Node):
         self.activated = False
 
         self.default_instantngp_path = os.path.join(os.path.expanduser('~'), "instant-ngp/scripts/run.py")
-        self.default_conda_environment = ''
+        self.default_conda_environment = 'instant-ngp'
         self.default_images_path = 'data'
         self.default_model_path = 'model/gmr'
 
@@ -46,7 +44,7 @@ class Reconstruction(Node):
         self.model_path = self.get_parameter('ply_path')
 
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-
+        qos_volatile = QoSProfile(depth=1, durability=QoSDurabilityPolicy.VOLATILE)
 
         # Callback groups
         group1 = MutuallyExclusiveCallbackGroup()
@@ -54,6 +52,7 @@ class Reconstruction(Node):
 
         # Publishers
         self.model_publisher = self.create_publisher(StringStamped, 'reconstruction/publishers/path', qos_profile=qos)
+        self.reconstruction_start_publisher = self.create_publisher(Empty, 'reconstruction/publishers/start', qos_profile=qos_volatile, callback_group=group2)
         
         # Subscribers
         self.reconstruction_switch_subscriber = self.create_subscription(Bool, 'robot_manager/publishers/switch_reconstruction', self.reconstruction_switch_callback, qos_profile=qos, callback_group=group2)
@@ -76,12 +75,13 @@ class Reconstruction(Node):
         self.activated = True
         self.get_logger().info("Starting reconstruction loop")
         while self.activated:
+            self.reconstruction_start_publisher.publish(Empty())
             path, header= self._reconstruction()
             self.publish_model_path(path, header)
         self.get_logger().info("Exiting reconstruction loop")
 
 
-    def reconstruction_callback(self, req, response):
+    def reconstruction_callback(self, request, response):
         self.get_logger().info(f"Received reconstruction request")
         response.path, _ = self._reconstruction()
         self.get_logger().info(f"Response sent!")
@@ -133,7 +133,7 @@ class Reconstruction(Node):
             cam_info.append(im_cam_info.cam_info)
             im = bridge.imgmsg_to_cv2(img_msg, 'bgr8')
             im = cv2.flip(im, 0)
-            cv2.imwrite(os.path.join(self.images_path.get_parameter_value().string_value, 'robot_cam' + '{:02d}'.format(i) + '.jpg'), im)
+            cv2.imwrite(os.path.join(self.images_path.get_parameter_value().string_value, 'images', 'robot_cam' + '{:02d}'.format(i) + '.jpg'), im)
             i += 1
         self.cam_info_to_json(cam_info)
         self.get_logger().info("Prepared images and cameras!")
