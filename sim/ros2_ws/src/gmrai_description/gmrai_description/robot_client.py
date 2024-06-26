@@ -181,12 +181,15 @@ class RobotClient:
             else:
                 job_status = State.WORKING
 
-            self.do_task(list(job_data['area'].values()))
+            self.do_task(list(job_data['area'].values()), int(job_data['cutting_height']))
             self.active_job = job_data
             return
         elif job_status == j_status.CANCEL_JOB:
-            self.robot_manager.get_logger().info(f"Cancelling...")
-            self.cancel_task()
+            if self.active_job is not None:
+                self.robot_manager.get_logger().info(f"Cancelling...")
+                self.cancel_task()
+            self.send_finished()
+            self.robot_state = State.IDLE
             return
         elif job_status == j_status.UPDATE_JOB:
             # Enviar datos del job ?????????
@@ -194,10 +197,9 @@ class RobotClient:
 
 ################# JOBS #################
 
-    def do_task(self, area):
-        self.robot_manager.get_logger().info(f"Area: {area}")
-        self.robot_manager.get_logger().info(f"Area type: {type(area)}")
-        self.robot_manager.get_logger().info(f"Area inside type: {type(area[0])}")
+    def do_task(self, area, height):
+        self.robot_manager.get_logger().info(f"Setting cutting height...")
+        self.robot_manager.publish_grass_height(height)
         self.robot_manager.publish_reconstruction_switch(True)
         self.robot_manager.startup()
         self.robot_manager.get_logger().info(f"Planning the task...")

@@ -7,7 +7,7 @@ from gmrai_description.robot_client import RobotClient
 
 from nav2_msgs.action import NavigateToPose
 from lifecycle_msgs.srv import GetState
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int32
 from nav_msgs.msg import OccupancyGrid
 from custom_interfaces.msg import StringStamped
 from custom_interfaces.srv import AskModelPath, AskHomePose
@@ -60,6 +60,7 @@ class RobotManager(Node):
         # Publishers
         qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.reconstruction_switch_publisher = self.create_publisher(Bool, 'robot_manager/publishers/switch_reconstruction', qos_profile=qos, callback_group=group2)
+        self.grass_height_publisher = self.create_publisher(Int32, 'robot_manager/publishers/grass_height', qos_profile=qos, callback_group=group3)
 
         # Subscribers
         self.reconstruction_path_subscriber = self.create_subscription(StringStamped, 'reconstruction/publishers/path', self.reconstruction_callback, qos_profile=qos, callback_group=group3)
@@ -113,6 +114,11 @@ class RobotManager(Node):
 
     def area_image_callback(self, msg:OccupancyGrid):
         self.area_image = np.reshape(msg.data, (msg.info.height, msg.info.width))
+
+    def publish_grass_height(self, height):
+        msg = Int32()
+        msg.data = int(height)
+        self.grass_height_publisher.publish(msg)
 
     # Home position
     def send_home_pose_request(self):
@@ -282,7 +288,6 @@ def main():
     executor = MultiThreadedExecutor()
     executor.add_node(manager)
 
-    manager.get_logger().info(f"Pwd: {os.getcwd()}")
     # test_new_job(manager)
     # test_start_job(manager)
     # test_cancel_job(manager)
