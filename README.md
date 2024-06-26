@@ -25,6 +25,8 @@
       </ul>
     </li>
     <li>
+      <a href="#project-structure">Project Structure</a>
+    <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
@@ -68,6 +70,18 @@ The robot is also paired with a mobile application, which allows users to contro
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- PROJECT STRUCTURE -->
+## Project Structure
+
+* assets: folder with the assets used in this README.md.
+* docs: documentation for the project, including the hardware and software scheme.
+* MyGMR: reference to the MyGMR app git project.
+* sim: main robot folder. Here the simulation and the ROS2 workspace can be found.
+  * coppeliasim: folder to store simulations in CoppeliaSim.
+  * ros2_ws: ROS2 workspace. All the packages are in the src folder and a brief description of each can be found in their respective package.xml.
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -182,7 +196,7 @@ The hardware used in this project are the following:
 #### Fritzing
 Using the hardware and the connections between each component from the table above, we’ve created the following circuitry through the Fritzing platform:
 
-<img src="docs/GMR_AI.png" alt="Fritzing" style="border-radius: 0%;">
+<img src="assets/GMR_AI.png" alt="Fritzing" width="600" height="350" style="border-radius: 0%;">
 
 ### MyGMR - Control your GMR device with our Android APP
 
@@ -190,11 +204,13 @@ We decided that the best form of controlling your GMR devices is by creating a f
 
 <img src="assets/app.png" alt="Logo" width="600" height="350" style="border-radius: 0%;">
 
-### Communication via ROS2 and Google Server 
+### Communication via ROS2 and Google Cloud 
 
-To communicate both the robot and the MyGMR app via Google server, we created a client that acts as a bridge between the main robot manager and the remote server. There are different states defined depending on the robot status such as Requesting when the robot isn't assigned to any account or Working when it's currently doing some job.
+To communicate both the robot and the MyGMR app via Google cloud, we created a client that acts as a bridge between the main robot manager and the remote server. There are different states defined depending on the robot status such as Requesting when the robot isn't assigned to any account or Working when it's currently doing some job.
 
 This client also sends the app all the information it needs, from the robot status to the 3D reconstruction of the terrain to show the user.
+
+<img src="assets/Software_Diagram.png" width="600" height="350" alt="Software Diagram" style="border-radius: 0%;">
 
 ### YOLO V8 - Obstacle Detection
 For obstacle detection, we created our own dataset with a training set, a validation set, and a test set. We started with a dataset of 63 images taken from a bird's-eye view of the entire simulation terrain. We then performed data augmentation, applying horizontal and vertical flips, 90-degree rotations clockwise and counter-clockwise, upside-down rotations, blurring up to 1.1 px, and adding noise to up to 0.3% of pixels. 
